@@ -119,7 +119,7 @@ INNER JOIN sPartClassification ON sPart.sPartClassification_ID = sPartClassifica
 INNER JOIN sOrderReceiptRange ON sOrderReceiptRange.ID = sOrderReceiptNo.sOrderReceiptRange_ID
 WHERE sOrderPartReceiptStatus_ID IN (SELECT ID FROM sOrderPartReceiptStatus WHERE Inspection =0)
 AND sPartClassification.Tool = 0 
-AND sOrderReceiptRange.aCompany_ID = 2
+AND sOrderReceiptRange.aCompany_ID = IIF((SELECT COUNT(ID) FROM aCompany WHERE Code = 'WAS') > 0, 2, sOrderReceiptRange.aCompany_ID) --Limit to WAS company in WAS
 
 ) AS T
 (sOrderPartReceipt_ID,PartNo, ReceiptNo, ReceiptDate, SerialNo, ReceiptQty, StockQty, IssueQty)
@@ -141,6 +141,8 @@ GO
 
 CREATE PROC [Support].[sp_ReceiptsNotInStock] @ReceiptNo varchar(30)
 AS 
+BEGIN
+
 SELECT sOrderPartReceipt.RecordTimeStampCreated 'Receipt Created'
 , sOrderPartReceipt.ID 'Receipt ID'
 , ReceiptNo
@@ -175,6 +177,9 @@ FROM sOrderPartReceipt
                 JOIN sOrderReceiptRange ON sOrderReceiptRange.ID = sOrderReceiptNo.sOrderReceiptRange_ID
 WHERE ReceiptNo = @ReceiptNo
 ORDER BY sStockLog.ID
+END
+
+GO
 
 EXEC sys.sp_addextendedproperty @name=N'HelpText', @value=N'Shows Receipts not in stock' , @level0type=N'SCHEMA',@level0name=N'Support', @level1type=N'PROCEDURE',@level1name=N'sp_ReceiptsNotInStock'
 
@@ -189,6 +194,7 @@ GO
 
 CREATE PROCEDURE [Support].[sp_InsertMissingStockRecord](@sOrderPartReceiptID int)
 as
+BEGIN 
 
 INSERT INTO sStock (sOrderPartReceipt_ID
 ,sBaseWarehouseLocation_ID
@@ -213,6 +219,9 @@ SELECT ID
 ,GETDATE()
 FROM sOrderPartReceipt
 WHERE sOrderPartReceipt.ID =  @sOrderPartReceiptID
+END
+
+GO
 
 EXEC sys.sp_addextendedproperty @name=N'HelpText', @value=N'Inserts a new stock record based on the receipt ID' , @level0type=N'SCHEMA',@level0name=N'Support', @level1type=N'PROCEDURE',@level1name=N'sp_InsertMissingStockRecord'
 
@@ -551,6 +560,13 @@ WHERE s.name = 'Support'
 
 
 END
+
+GO
+
+DECLARE @HelpText VARCHAR (100) = N'Support ToolBox Created ' + CAST(GETDATE()AS varchar(30)) 
+
+EXEC sys.sp_addextendedproperty @name=N'HelpText', @value=@HelpText, @level0type=N'SCHEMA',@level0name=N'Support', @level1type=N'PROCEDURE',@level1name=N'Help'
+
 GO
 
 
