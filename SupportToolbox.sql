@@ -1,5 +1,4 @@
 /* CREATE SCHEMA Support */
---Test GIT CARL
 
 IF EXISTS(SELECT * FROM sys.views WHERE Name = 'GeneralIntegrityChecks')
 DROP VIEW Support.GeneralIntegrityChecks
