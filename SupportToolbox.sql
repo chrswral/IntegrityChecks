@@ -532,6 +532,80 @@ EXEC sys.sp_addextendedproperty @name=N'HelpText', @value=N'Checks through all s
 GO
 
 
+IF EXISTS(SELECT * FROM sys.views WHERE Name = 'ToolIntegrityCheck')
+DROP VIEW Support.ToolIntegrityCheck
+
+GO
+
+CREATE VIEW [Support].[ToolIntegrityCheck]
+
+AS
+
+SELECT ID AS sOrderPartReceipt_ID,
+       ReceiptNo,
+       PartNo,
+       ReceiptQty,
+       ToolQty,
+       IssueQty,
+       SerialNo,
+       (ToolQty + IssueQty) - ReceiptQty AS DiscrepancyQty
+FROM
+(
+SELECT TransactionType.Tool,
+       sOrderPartReceipt.ID AS sOrderPartReceipt_ID,
+       sOrderReceiptNo.ReceiptNo,
+       sOrderPartReceipt.SerialNo,
+(
+       SELECT PartNo
+       FROM sPart
+       WHERE ID = sPart_ID
+) AS PartNo,
+       Qty AS ReceiptQty,
+       ISNULL(
+             (
+             SELECT SUM(Qty)
+             FROM dbo.sStock
+             WHERE(sOrderPartReceipt_ID = dbo.sOrderPartReceipt.ID)
+             ), 0) AS ToolQty,
+       ISNULL(
+             (
+             SELECT SUM(sDemandPart.Qty)
+             FROM sDemandPart
+             LEFT JOIN sPartTransactionType ON sPartTransactionType.ID = sDemandPart.sPartTransactionType_ID
+             LEFT JOIN sDemandItemStatus ON sDemandPart.sDemandItemStatus_ID = sDemandItemStatus.ID
+             LEFT JOIN sDemandPart AS Parent ON sDemandPart.sDemandPart_IDIssued = Parent.ID
+             LEFT JOIN sPartTransactionType AS ParentsPTT ON Parent.sPartTransactionType_ID = ParentsPTT.ID
+             WHERE sDemandPart.sOrderPartReceipt_ID = sOrderPartReceipt.ID
+                   AND ((sDemandItemStatus.Issued = 1
+                         AND sPartTransactionType.Loan = 0) 
+                     -- Need to include genuine credit lines
+                        OR (sDemandItemStatus.Credit = 1
+                            AND sPartTransactionType.Credit = 1
+                            AND (ISNULL(ParentsPTT.Tool, 0) = 0
+                                 AND ISNULL(ParentsPTT.Loan, 0) = 0)))
+             ), 0) AS IssueQty
+FROM sOrderPartReceipt
+JOIN sOrderReceiptNo ON sOrderPartReceipt.sOrderReceiptNo_ID = sOrderReceiptNo.ID
+JOIN sPart ON sOrderPartReceipt.sPart_ID = sPart.ID
+JOIN sPartClassification ON sPart.sPartClassification_ID = sPartClassification.ID
+JOIN sPartTransactionType AS TransactionType ON sPartClassification.sPartTransactionType_IDDefault = TransactionType.ID
+WHERE dbo.sOrderPartReceipt.sOrderPartReceiptStatus_ID IN
+(
+SELECT ID
+FROM dbo.sOrderPartReceiptStatus
+WHERE sOrderPartReceiptStatus.Inspection = 0
+)
+) AS T1(Tool, ID, ReceiptNo, SerialNo, PartNo, ReceiptQty, ToolQty, IssueQty)
+WHERE Tool = 1
+      AND ReceiptQty != ToolQty + IssueQty;
+
+
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'HelpText', @value=N'Returns tool integrity errors' , @level0type=N'SCHEMA',@level0name=N'Support', @level1type=N'VIEW',@level1name=N'ToolIntegrityCheck'
+
+Go
+
 IF EXISTS(SELECT * FROM sys.procedures WHERE Name = 'Help')
 DROP PROCEDURE [Support].[Help]
 
