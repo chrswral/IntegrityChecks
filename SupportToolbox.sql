@@ -1,6 +1,6 @@
 /* CREATE SCHEMA Support */
 
-IF EXISTS(SELECT * FROM sys.views WHERE Name = 'GeneralIntegrityChecks')
+IF EXISTS(SELECT * FROM sys.views WHERE name = 'GeneralIntegrityChecks')
 DROP VIEW Support.GeneralIntegrityChecks
 
 GO
@@ -634,6 +634,40 @@ WHERE s.name = 'Support'
 
 
 END
+
+GO
+
+
+IF EXISTS(SELECT * FROM sys.views WHERE name = 'BadConfig')
+DROP VIEW Support.BadConfig
+
+GO
+
+
+CREATE VIEW Support.BadConfig
+
+AS
+
+
+SELECT * FROM (
+
+SELECT ConfigName, 'Should be False. True allows possible overruns' AS Problem
+FROM uRALConfig
+WHERE ConfigName LIKE 'AllowMIRemainingToBeGreaterThanLife'
+
+UNION
+
+-- IF ForecastingBasedOnAuditedTechLogs not true (NULL), then bad
+SELECT IIF(COUNT(ID) = 0,'ForecastingBasedOnAuditedTechLogs',NULL), ' Should be True. False does not recalculate asset and MI due values correctly'
+FROM uRALConfig
+WHERE ConfigName LIKE 'ForecastingBasedOnAuditedTechLogs'
+
+) ds WHERE ConfigName IS NOT NULL
+
+
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'HelpText', @value='Looks for bad config setup', @level0type=N'SCHEMA',@level0name=N'Support', @level1type=N'VIEW',@level1name=N'BadConfig'
 
 GO
 
