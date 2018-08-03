@@ -32,7 +32,7 @@ SELECT '2',
 'SELECT sStock.ID, 
 																			ISNULL(
 																				(SELECT TOP 1 sBaseWarehouseLocation_ID FROM sStockLog WHERE BaseTableID = sStock.ID  AND sBaseWarehouseLocation_ID > 0 ORDER BY ID DESC) , 
-																				(SELECT TOP 1 sBaseWarehouseLocation_ID FROM sOrderPartReceipt WHERE ID = sStock.sOrderPartReceipt_ID ORDER BY ID DESC))
+														(SELECT TOP 1 sBaseWarehouseLocation_ID FROM sOrderPartReceipt WHERE ID = sStock.sOrderPartReceipt_ID ORDER BY ID DESC))
 																			FROM sStock 
 																			LEFT JOIN sBaseWarehouseLocation ON sStock.sBaseWarehouseLocation_ID = sBaseWarehouseLocation.ID 
 																			WHERE sBaseWarehouseLocation.ID IS NULL'
@@ -146,10 +146,22 @@ FROM (  SELECT 'SP' AS Type,
         JOIN sys.schemas s ON s.schema_id = v.schema_id
         LEFT JOIN sys.extended_properties ep ON ep.major_id = v.object_id
         WHERE s.name = 'Support') ds
+UNION 
+
+SELECT '2',
+       'Bad Config Settings', 
+       ISNULL(COUNT(*),0),
+       'SELECT * FROM sup.BadConfig'
 
 
 
-) ds
+
+
+FROM
+sup.BadConfig
+)
+
+ ds
 WHERE ds.ErrorCount > 0
 ORDER BY Priority;
 
