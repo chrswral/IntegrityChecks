@@ -1,6 +1,17 @@
 
 /* CREATE SCHEMA sup */
 
+/*** Create Sup Audit History Table ***/
+IF NOT EXISTS (select * from sys.tables t join sys.schemas s on (t.schema_id = s.schema_id) where s.name = 'sup' and t.name = 'AuditHistory') 
+    
+CREATE TABLE sup.AuditHistory(
+	ID int IDENTITY PRIMARY KEY ,
+	TimeStampCreated datetime NOT NULL,
+	Fix varchar(50) NOT NULL,
+	BaseTable varchar(50) NOT NULL,
+	BaseTableID int NOT NULL)
+
+GO
 
 /*** General INtegrity Checks ***/
 IF EXISTS
