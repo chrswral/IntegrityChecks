@@ -1,3 +1,5 @@
+
+
 SET XACT_ABORT ON 
 
 BEGIN TRAN
@@ -59,6 +61,7 @@ WHERE sDemandItemStatus.Issued = 1
 UPDATE sStock
 SET sDemandPart_ID = 0
 OUTPUT deleted.ID,'Remove orphaned links to missing sDemandPart','sStock'
+INTO @AuditHistoryPending
 FROM sStock
 LEFT JOIN sDemandPart ON sStock.sDemandPart_ID = sDemandPart.ID
 WHERE sDemandPart.ID IS NULL AND sStock.sDemandPart_ID > 0
@@ -71,5 +74,4 @@ SELECT * FROM sup.AuditHistory
 
 
 
-ROLLBACK
-
+COMMIT
