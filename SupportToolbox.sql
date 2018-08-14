@@ -123,6 +123,16 @@ JOIN sPartTransactionType ON sPartTransactionType.ID = sPartTransactionType_ID
 WHERE sDemandItemStatus.Completed = 1
       AND sPartTransactionType.Replenishment = 1
 
+UNION 
+
+SELECT '3',
+       'Duplicate Stock Config Settings',
+       ISNULL(COUNT(sStockConfig.ID), 0),
+       'SELECT * FROM sStockConfig GROUP BY ConfigName HAVING COUNT(ConfigName) > 1)'
+FROM sStockConfig
+GROUP BY ConfigName
+HAVING COUNT(ConfigName) > 1
+
 
 
 UNION
@@ -171,6 +181,8 @@ SELECT '2',
 
 FROM
 sup.BadConfig
+
+
 )
 
  ds
@@ -797,6 +809,9 @@ EXEC sys.sp_addextendedproperty
      @level1type = N'VIEW',
      @level1name = N'BadConfig';
 GO
+
+
+
 
 /*** Help Proc ***/
 

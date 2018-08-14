@@ -1,8 +1,9 @@
-
+CREATE PROCEDURE sup.GeneralIntegirtyFixes
+AS 
 
 SET XACT_ABORT ON 
 
-BEGIN TRAN
+
 
 /* Create Pending Table */
 DECLARE @AuditHistoryPending TABLE (
@@ -70,8 +71,7 @@ WHERE sDemandPart.ID IS NULL AND sStock.sDemandPart_ID > 0
 INSERT INTO sup.AuditHistory(BaseTable,BaseTableID,Fix)
 SELECT BaseTable,BaseTableID,Fix FROM @AuditHistoryPending
 
-SELECT * FROM sup.AuditHistory
+SELECT * FROM @AuditHistoryPending
 
 
-
-COMMIT
+GO
