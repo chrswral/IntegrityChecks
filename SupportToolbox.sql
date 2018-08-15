@@ -872,6 +872,16 @@ JOIN sPartTransactionType ON sDemandPart.sPartTransactionType_ID = sPartTransact
 
 GO
 
+EXEC sys.sp_addextendedproperty
+     @name = N'HelpText',
+     @value = N'sDemandPart object view',
+     @level0type = N'SCHEMA',
+     @level0name = N'sup',
+     @level1type = N'VIEW',
+     @level1name = N'vDemandPart';
+
+GO     
+
 /*** Help Proc ***/
 
 IF EXISTS
