@@ -857,18 +857,20 @@ sPart.PartNo,
 sPart.Description,
 sOrderReceiptNo.ReceiptNo,
 sOrderPartReceipt.SerialNo,
-sDemandPart.Qty AS Quantity,
+sDemandPart.Qty,
 sPartTransactionType.TransactionType,
 sDemandItemStatus.Status,
-sDemandPart.*
+sDemandPart.RecordTimeStampCreated,
+uRALUser.RALUser AS uRALUser_Created,
+uRALUser.FirstName+' '+uRALUser.Surname AS UserCreated
 FROM sDemandPart
 JOIN sDemand ON sDemand.ID = sDemandPart.sDemand_ID
 JOIN sOrderPartReceipt ON sOrderPartReceipt.ID = sDemandPart.sOrderPartReceipt_ID
 JOIN sOrderReceiptNo ON sOrderPartReceipt.sOrderReceiptNo_ID = sOrderReceiptNo.ID
 JOIN sPart ON sPart.ID = sDemandPart.sPart_IDDemanded
-JOIN sPartClassification ON sPartClassification.ID = sPart.sPartClassification_ID
 JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandPart.sDemandItemStatus_ID
 JOIN sPartTransactionType ON sDemandPart.sPartTransactionType_ID = sPartTransactionType.ID
+JOIN uRALUser ON uRALUser.ID = sDemandPart.uRALUser_IDCreated
 
 GO
 
@@ -879,6 +881,51 @@ EXEC sys.sp_addextendedproperty
      @level0name = N'sup',
      @level1type = N'VIEW',
      @level1name = N'vDemandPart';
+
+GO     
+
+
+IF EXISTS
+(
+SELECT *
+FROM sys.views
+WHERE name = 'vOrderPartReceipt'
+)
+    DROP VIEW sup.vOrderPartReceipt;
+
+GO
+
+CREATE VIEW sup.vOrderPartReceipt
+
+AS
+
+SELECT 
+sOrderPartReceipt.ID AS ID,
+sPart.PartNo AS PartNo,
+sPart.Description,
+sOrderReceiptNo.ReceiptNo,
+sOrderPartReceipt.SerialNo AS SerialNo,
+sOrderPartReceipt.Qty AS ReceiptQty,
+sOrderPartReceipt.UnitCost,
+sOrderPartReceiptStatus.Status,
+sOrderPartReceipt.RecordTimeStampCreated,
+uRALUser.RALUser AS uRALUser_Created,
+uRALUser.FirstName+' '+uRALUser.Surname AS UserCreated
+FROM sOrderPartReceipt
+JOIN sPart ON sPart.ID = sOrderPartReceipt.sPart_ID
+JOIN sOrderReceiptNo ON sOrderReceiptNo.ID = sOrderPartReceipt.sOrderReceiptNo_ID
+JOIN sOrderPartReceiptStatus ON sOrderPartReceiptStatus.ID = sOrderPartReceipt.sOrderPartReceiptStatus_ID
+JOIN uRALUser ON uRALUser.ID = sOrderPartReceipt.uRALUser_IDCreated
+
+GO
+
+EXEC sys.sp_addextendedproperty
+     @name = N'HelpText',
+     @value = N'sOrderPartReceipt object view',
+     @level0type = N'SCHEMA',
+     @level0name = N'sup',
+     @level1type = N'VIEW',
+     @level1name = N'vOrderPartReceipt';
 
 GO     
 
