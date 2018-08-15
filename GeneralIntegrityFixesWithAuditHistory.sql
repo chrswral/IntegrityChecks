@@ -1,9 +1,7 @@
-CREATE PROCEDURE sup.GeneralIntegirtyFixes
+CREATE PROCEDURE sup.GeneralIntegrityFixes
 AS 
 
 SET XACT_ABORT ON 
-
-
 
 /* Create Pending Table */
 DECLARE @AuditHistoryPending TABLE (
@@ -12,9 +10,17 @@ DECLARE @AuditHistoryPending TABLE (
     BaseTable VARCHAR(50)
 )
 
+BEGIN TRANSACTION
+
+/* Delete Stock records without valid receipts */
+DELETE sStock
+OUTPUT deleted.ID,'Deleted: Missing Receipt','sStock'
+INTO @AuditHistoryPending   
+FROM sStock
+LEFT JOIN sOrderPartReceipt ON sStock.sOrderPartReceipt_ID = sOrderPartReceipt.ID
+WHERE sOrderPartReceipt.ID IS NULL
 
 /*Remove orphaned links to missing sDemandPart */
-
 UPDATE sStock
 SET sStockOwnership_ID = sOrderPartReceipt.sStockOwnership_ID
 OUTPUT deleted.ID,'Missing Stock Ownership','sStock' 
@@ -70,6 +76,8 @@ WHERE sDemandPart.ID IS NULL AND sStock.sDemandPart_ID > 0
 
 INSERT INTO sup.AuditHistory(BaseTable,BaseTableID,Fix)
 SELECT BaseTable,BaseTableID,Fix FROM @AuditHistoryPending
+
+COMMIT
 
 SELECT * FROM @AuditHistoryPending
 

@@ -14,7 +14,7 @@ CREATE TABLE sup.AuditHistory(
 
 GO
 
-/*** General INtegrity Checks ***/
+/*** General Integrity Checks ***/
 IF EXISTS
 (
 SELECT *
@@ -27,9 +27,42 @@ GO
 
 CREATE VIEW [sup].[GeneralIntegrityChecks]
 AS
-SELECT TOP 100 PERCENT *
+
+SELECT TOP 1000 *
 FROM
 (
+
+SELECT '2' AS Priority,
+       'Stock Records without Location' AS Description,
+       ISNULL(COUNT(sStock.ID), 0) AS ErrorCount,
+            'SELECT sStock.ID,
+                sPart.PartNo,
+                sOrderReceiptNo.ReceiptNo,
+                ISNULL(
+                        (
+                        SELECT TOP 1 sBaseWarehouseLocation_ID
+                        FROM sStockLog
+                        WHERE BaseTableID = sStock.ID
+                            AND sBaseWarehouseLocation_ID > 0
+                        ORDER BY ID DESC
+                        ),
+                        (
+                        SELECT TOP 1 sBaseWarehouseLocation_ID
+                        FROM sOrderPartReceipt
+                        WHERE ID = sStock.sOrderPartReceipt_ID
+                        ORDER BY ID DESC
+                        )) NewLocationID
+            FROM sStock
+            LEFT JOIN sBaseWarehouseLocation ON sStock.sBaseWarehouseLocation_ID = sBaseWarehouseLocation.ID
+            INNER JOIN sOrderPartReceipt ON sStock.sOrderPartReceipt_ID = sOrderPartReceipt.ID
+            LEFT JOIN sOrderReceiptNo ON sOrderPartReceipt.sOrderReceiptNo_ID = sOrderReceiptNo.ID
+            LEFT JOIN sPart ON sOrderPartReceipt.sPart_ID = sPart.ID
+            WHERE sBaseWarehouseLocation.ID IS NULL;' AS Query
+FROM sStock
+LEFT JOIN sBaseWarehouseLocation ON sStock.sBaseWarehouseLocation_ID = sBaseWarehouseLocation.ID
+INNER JOIN sOrderPartReceipt ON sStock.sOrderPartReceipt_ID = sOrderPartReceipt.ID
+WHERE sBaseWarehouseLocation.ID IS NULL
+UNION
 SELECT '2' Priority,
        'Stock Records without Ownership' AS Description,
        ISNULL(COUNT(sStock.ID), 0) AS ErrorCount,
@@ -38,19 +71,16 @@ FROM sStock
 LEFT JOIN sStockOwnership ON sStock.sStockOwnership_ID = sStockOwnership.ID
 WHERE sStockOwnership.ID IS NULL
 UNION
-SELECT '2',
-       'Stock Records without Location',
-       ISNULL(COUNT(sStock.ID), 0),
-'SELECT sStock.ID, 
-																			ISNULL(
-																				(SELECT TOP 1 sBaseWarehouseLocation_ID FROM sStockLog WHERE BaseTableID = sStock.ID  AND sBaseWarehouseLocation_ID > 0 ORDER BY ID DESC) , 
-														(SELECT TOP 1 sBaseWarehouseLocation_ID FROM sOrderPartReceipt WHERE ID = sStock.sOrderPartReceipt_ID ORDER BY ID DESC))
-																			FROM sStock 
-																			LEFT JOIN sBaseWarehouseLocation ON sStock.sBaseWarehouseLocation_ID = sBaseWarehouseLocation.ID 
-																			WHERE sBaseWarehouseLocation.ID IS NULL'
+SELECT '2' Priority,
+       'Stock Records without Receipt' AS Description,
+       ISNULL(COUNT(sStock.ID), 0) AS ErrorCount,
+	       'SELECT sStock.ID, ISNULL((SELECT MAX(BaseTableID) FROM sOrderPartReceiptLog WHERE BaseTableID = sStock.sOrderPartReceipt_ID),0) AS BaseTableID
+			FROM sStock
+			LEFT JOIN sOrderPartReceipt ON sStock.sOrderPartReceipt_ID = sOrderPartReceipt.ID
+			WHERE sOrderPartReceipt.ID IS NULL' Query
 FROM sStock
-LEFT JOIN sBaseWarehouseLocation ON sStock.sBaseWarehouseLocation_ID = sBaseWarehouseLocation.ID
-WHERE sBaseWarehouseLocation.ID IS NULL
+LEFT JOIN sOrderPartReceipt ON sStock.sOrderPartReceipt_ID = sOrderPartReceipt.ID
+WHERE sOrderPartReceipt.ID IS NULL
 UNION
 SELECT '3',
        'Cancelled Demands with WIP or COS',
@@ -128,7 +158,7 @@ UNION
 SELECT '3',
        'Duplicate Stock Config Settings',
        ISNULL(COUNT(sStockConfig.ID), 0),
-       'SELECT * FROM sStockConfig GROUP BY ConfigName HAVING COUNT(ConfigName) > 1)'
+       'SELECT * FROM sStockConfig GROUP BY ConfigName HAVING COUNT(ConfigName) > 1'
 FROM sStockConfig
 GROUP BY ConfigName
 HAVING COUNT(ConfigName) > 1
@@ -174,11 +204,6 @@ SELECT '2',
        'Bad Config Settings', 
        ISNULL(COUNT(*),0),
        'SELECT * FROM sup.BadConfig'
-
-
-
-
-
 FROM
 sup.BadConfig
 
@@ -203,7 +228,7 @@ EXEC sys.sp_addextendedproperty
 
 GO
 
-/*** Stock INtegrity Checks ***/
+/*** Stock Integrity Checks ***/
 
 IF EXISTS
 (
