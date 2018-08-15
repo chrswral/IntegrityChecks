@@ -73,6 +73,14 @@ FROM sStock
 LEFT JOIN sDemandPart ON sStock.sDemandPart_ID = sDemandPart.ID
 WHERE sDemandPart.ID IS NULL AND sStock.sDemandPart_ID > 0
 
+/* Fix Menu &s */
+UPDATE uRALMenu
+SET NodeText = REPLACE(NodeText, ' & ', ' && ')
+OUTPUT deleted.ID,'Fixed Menu &s ','uRALMenu'
+INTO @AuditHistoryPending   
+FROM uRALMenu
+WHERE NodeText LIKE '% & %'
+
 
 INSERT INTO sup.AuditHistory(BaseTable,BaseTableID,Fix)
 SELECT BaseTable,BaseTableID,Fix FROM @AuditHistoryPending

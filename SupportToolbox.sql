@@ -835,8 +835,42 @@ EXEC sys.sp_addextendedproperty
      @level1name = N'BadConfig';
 GO
 
+/*** Support Object Views ***/
 
+IF EXISTS
+(
+SELECT *
+FROM sys.views
+WHERE name = 'vDemandPart'
+)
+    DROP VIEW sup.vDemandPart;
 
+GO
+
+CREATE VIEW sup.vDemandPart
+
+AS
+
+SELECT DemandNo, 
+DemandItem+'\'+DemandItemSequence AS Item,
+sPart.PartNo,
+sPart.Description,
+sOrderReceiptNo.ReceiptNo,
+sOrderPartReceipt.SerialNo,
+sDemandPart.Qty AS Quantity,
+sPartTransactionType.TransactionType,
+sDemandItemStatus.Status,
+sDemandPart.*
+FROM sDemandPart
+JOIN sDemand ON sDemand.ID = sDemandPart.sDemand_ID
+JOIN sOrderPartReceipt ON sOrderPartReceipt.ID = sDemandPart.sOrderPartReceipt_ID
+JOIN sOrderReceiptNo ON sOrderPartReceipt.sOrderReceiptNo_ID = sOrderReceiptNo.ID
+JOIN sPart ON sPart.ID = sDemandPart.sPart_IDDemanded
+JOIN sPartClassification ON sPartClassification.ID = sPart.sPartClassification_ID
+JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandPart.sDemandItemStatus_ID
+JOIN sPartTransactionType ON sDemandPart.sPartTransactionType_ID = sPartTransactionType.ID
+
+GO
 
 /*** Help Proc ***/
 
@@ -868,6 +902,9 @@ AS
         WHERE s.name = 'sup';
     END;
 GO
+
+
+/*** Results ***/
 
 DECLARE @HelpText VARCHAR(100)= N'Support ToolBox Created '+CAST(GETDATE() AS VARCHAR(30));
 EXEC sys.sp_addextendedproperty
