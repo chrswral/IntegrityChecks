@@ -927,6 +927,46 @@ EXEC sys.sp_addextendedproperty
      @level1type = N'VIEW',
      @level1name = N'vOrderPartReceipt';
 
+GO    
+
+GO
+
+IF EXISTS (SELECT * FROM sys.views WHERE name = 'vEmployeeDayHoursLog')
+	DROP VIEW sup.vEmployeeDayHoursLog;
+GO
+
+CREATE VIEW sup.vEmployeeDayHoursLog
+AS
+
+SELECT L.ID
+,IIF(LAG(L.ID,1,0) OVER(ORDER BY L.ID)=L.ID-1,NULL,1) AS NewEdit
+,L.LogChangeType
+,CONVERT(smalldatetime,L.RecordTimeStampCreated) RecordTimeStampCreated
+,CONCAT(sO.OrderNo,'\',sOT.TaskNo) AS OrderTask
+,CONVERT(smalldatetime, L.StartTime) StartTime
+,NULLIF(CONVERT(smalldatetime, L.FinishTime),'1900-01-01 00:00:00') FinishTime
+,DurationMinutes
+,lHC.HoursCode
+,CONVERT(smalldatetime,lED.EnterWorkTime) EnterWorkTime
+,CONVERT(smalldatetime,lED.LeaveWorkTime) LeaveWorkTime
+
+FROM lEmployeeDayHoursLog L
+JOIN sOrderTask sOT ON sOT.ID = L.sOrderTask_ID
+JOIN sOrder sO ON sOT.sOrder_ID = sO.ID
+JOIN lEmployee lE ON lE.ID = L.lEmployee_ID
+JOIN lEmployeeDay lED ON lED.ID = L.lEmployeeDay_ID
+JOIN lHoursCode lHC ON L.lHoursCode_ID = lHC.ID 
+
+GO
+
+EXEC sys.sp_addextendedproperty
+     @name = N'HelpText',
+     @value = N'lEmployeeDayHoursLog object view',
+     @level0type = N'SCHEMA',
+     @level0name = N'sup',
+     @level1type = N'VIEW',
+     @level1name = N'vEmployeeDayHoursLog';
+
 GO     
 
 /*** Help Proc ***/
