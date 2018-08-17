@@ -234,7 +234,7 @@ IF EXISTS
 (
 SELECT *
 FROM sys.views
-WHERE Name = 'StockIntegrityCheck'
+WHERE name = 'StockIntegrityCheck'
 )
     DROP VIEW sup.StockIntegrityCheck;
 
@@ -346,7 +346,7 @@ IF EXISTS
 (
 SELECT *
 FROM sys.procedures
-WHERE Name = 'sp_InsertMissingStockRecord'
+WHERE name = 'sp_InsertMissingStockRecord'
 )
     DROP PROCEDURE sup.sp_InsertMissingStockRecord;
 GO
@@ -395,7 +395,7 @@ IF EXISTS
 (
 SELECT *
 FROM sys.procedures
-WHERE Name = 'sp_BatchHistory'
+WHERE name = 'sp_BatchHistory'
 )
     DROP PROCEDURE sup.sp_BatchHistory;
 GO
@@ -723,7 +723,7 @@ IF EXISTS
 (
 SELECT *
 FROM sys.views
-WHERE Name = 'ToolIntegrityCheck'
+WHERE name = 'ToolIntegrityCheck'
 )
     DROP VIEW sup.ToolIntegrityCheck;
 GO
@@ -969,13 +969,47 @@ EXEC sys.sp_addextendedproperty
 
 GO     
 
+
+IF EXISTS (SELECT * FROM sys.views WHERE name = 'vTransaction')
+	DROP VIEW sup.vTransaction;
+GO
+
+CREATE VIEW sup.vTransaction
+AS
+
+SELECT aT.ID
+, aJ.JournalNo
+, aT.TransactionLineNumber
+, aT.TransactionLineDescription
+, aT.AmountBase
+, aT.AmountFC
+, aT.Credit
+, aA.Account
+FROM aTransaction aT
+JOIN aJournalLine aJL ON aJL.ID = aT.aJournalLine_ID
+JOIN aJournal aJ ON aJ.ID = aJL.aJournal_ID
+JOIN aAccount aA ON aA.ID = aT.aAccount_ID
+
+GO
+
+EXEC sys.sp_addextendedproperty
+     @name = N'HelpText',
+     @value = N'aTransaction object view',
+     @level0type = N'SCHEMA',
+     @level0name = N'sup',
+     @level1type = N'VIEW',
+     @level1name = N'vTransaction';
+
+GO  
+
+
 /*** Help Proc ***/
 
 IF EXISTS
 (
 SELECT *
 FROM sys.procedures
-WHERE Name = 'Help'
+WHERE name = 'Help'
 )
     DROP PROCEDURE [sup].[Help];
 GO
