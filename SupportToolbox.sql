@@ -207,6 +207,24 @@ SELECT '2',
 FROM
 sup.BadConfig
 
+UNION
+
+SELECT '2'
+        , 'Unbalanced Labour WIP Lines'
+        , ISNULL(COUNT(*),0)
+        , 'SELECT vTransaction.ID, JournalNo, vTransaction.TransactionLineNumber, vTransaction.TransactionLineDescription, vTransaction.AmountBase, vTransaction.Credit, SUM(AmountBaseWIP) AS AmountBaseWIP
+        FROM sup.vTransaction JOIN lEmployeeDayHours ON lEmployeeDayHours.aTransaction_IDWIPWIPAccount = vTransaction.ID	OR lEmployeeDayHours.aTransaction_IDWIP = vTransaction.ID GROUP BY vTransaction.ID, JournalNo, vTransaction.AmountBase, vTransaction.Credit, vTransaction.TransactionLineNumber, vTransaction.TransactionLineDescription 
+        HAVING SUM(AmountBaseWIP) <> vTransaction.AmountBase ORDER BY JournalNo, TransactionLineNumber'
+FROM (SELECT 
+aTransaction.ID
+, SUM(AmountBaseWIP) AS AmountBaseWIP
+FROM aTransaction
+JOIN lEmployeeDayHours ON lEmployeeDayHours.aTransaction_IDWIPWIPAccount = aTransaction.ID
+	OR lEmployeeDayHours.aTransaction_IDWIP = aTransaction.ID
+GROUP BY aTransaction.ID, aTransaction.AmountBase
+HAVING SUM(AmountBaseWIP) <> aTransaction.AmountBase
+)ds
+
 
 )
 
@@ -938,8 +956,10 @@ GO
 CREATE VIEW sup.vEmployeeDayHoursLog
 AS
 
-SELECT L.ID
-,IIF(LAG(L.ID,1,0) OVER(ORDER BY L.ID)=L.ID-1,NULL,1) AS NewEdit
+SELECT
+L.BaseTableID
+, L.ID
+,IIF(LAG(L.ID,1,0) OVER(PARTITION BY L.lEmployeeDay_ID ORDER BY L.ID)=L.ID-1,NULL,1) AS NewEdit
 ,L.LogChangeType
 ,CONVERT(smalldatetime,L.RecordTimeStampCreated) RecordTimeStampCreated
 ,CONCAT(sO.OrderNo,'\',sOT.TaskNo) AS OrderTask
@@ -949,13 +969,16 @@ SELECT L.ID
 ,lHC.HoursCode
 ,CONVERT(smalldatetime,lED.EnterWorkTime) EnterWorkTime
 ,CONVERT(smalldatetime,lED.LeaveWorkTime) LeaveWorkTime
-
+, L.lEmployeeDay_ID
+, L.lEmployee_ID
+, CONCAT(lE.FirstName,' ',lE.Surname) AS EmployeeName
 FROM lEmployeeDayHoursLog L
 JOIN sOrderTask sOT ON sOT.ID = L.sOrderTask_ID
 JOIN sOrder sO ON sOT.sOrder_ID = sO.ID
 JOIN lEmployee lE ON lE.ID = L.lEmployee_ID
 JOIN lEmployeeDay lED ON lED.ID = L.lEmployeeDay_ID
 JOIN lHoursCode lHC ON L.lHoursCode_ID = lHC.ID 
+
 
 GO
 
