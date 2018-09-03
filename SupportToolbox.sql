@@ -990,8 +990,48 @@ EXEC sys.sp_addextendedproperty
      @level1type = N'VIEW',
      @level1name = N'vEmployeeDayHoursLog';
 
-GO     
+GO
 
+IF EXISTS (SELECT * FROM sys.views WHERE name = 'vEmployeeDayHours')
+	DROP VIEW sup.vEmployeeDayHours;
+GO    
+
+
+CREATE VIEW sup.vEmployeeDayHours
+AS
+
+SELECT
+H.ID
+,IIF(LAG(H.ID,1,0) OVER(PARTITION BY H.lEmployeeDay_ID ORDER BY H.ID)=H.ID-1,NULL,1) AS NewEdit
+,CONVERT(smalldatetime,H.RecordTimeStampCreated) RecordTimeStampCreated
+,CONCAT(sO.OrderNo,'\',sOT.TaskNo) AS OrderTask
+,CONVERT(smalldatetime, H.StartTime) StartTime
+,NULLIF(CONVERT(smalldatetime, H.FinishTime),'1900-01-01 00:00:00') FinishTime
+,DurationMinutes
+,lHC.HoursCode
+,CONVERT(smalldatetime,lED.EnterWorkTime) EnterWorkTime
+,CONVERT(smalldatetime,lED.LeaveWorkTime) LeaveWorkTime
+, H.lEmployeeDay_ID
+, H.lEmployee_ID
+, CONCAT(lE.FirstName,' ',lE.Surname) AS EmployeeName
+FROM lEmployeeDayHours H
+JOIN sOrderTask sOT ON sOT.ID = H.sOrderTask_ID
+JOIN sOrder sO ON sOT.sOrder_ID = sO.ID
+JOIN lEmployee lE ON lE.ID = H.lEmployee_ID
+JOIN lEmployeeDay lED ON lED.ID = H.lEmployeeDay_ID
+JOIN lHoursCode lHC ON H.lHoursCode_ID = lHC.ID 
+
+GO
+
+EXEC sys.sp_addextendedproperty
+     @name = N'HelpText',
+     @value = N'lEmployeeDayHours object view',
+     @level0type = N'SCHEMA',
+     @level0name = N'sup',
+     @level1type = N'VIEW',
+     @level1name = N'vEmployeeDayHours';
+
+GO
 
 IF EXISTS (SELECT * FROM sys.views WHERE name = 'vTransaction')
 	DROP VIEW sup.vTransaction;
