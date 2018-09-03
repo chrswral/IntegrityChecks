@@ -136,11 +136,19 @@ UNION
 SELECT '2',
        'Stock linked to Issued Demand Part records',
        ISNULL(COUNT(sStock.ID), 0),
-       'SELECT sStock.ID, sDemandPart_ID FROM sStock JOIN sDemandPart ON sStock.sDemandPart_ID = sDemandPart.ID JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandPart.sDemandItemStatus_ID WHERE sDemandItemStatus.Issued = 1 '
-FROM sStock
-JOIN sDemandPart ON sStock.sDemandPart_ID = sDemandPart.ID
-JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandPart.sDemandItemStatus_ID
-WHERE sDemandItemStatus.Issued = 1
+       'SELECT sStock.ID, sDemandPart_ID 
+        FROM sStock 
+        JOIN sDemandPart ON sStock.sDemandPart_ID = sDemandPart.ID 
+        JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandPart.sDemandItemStatus_ID 
+        JOIN sPart on sPart_IDDemanded = sPart.ID
+        JOIN sPartClassification on sPartClassification.ID = sPart.sPartClassification_ID
+        WHERE sDemandItemStatus.Issued = 1 and sPartClassification.Tool <> 1 '
+FROM sStock 
+JOIN sDemandPart ON sStock.sDemandPart_ID = sDemandPart.ID 
+JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandPart.sDemandItemStatus_ID 
+JOIN sPart on sPart_IDDemanded = sPart.ID
+JOIN sPartClassification on sPartClassification.ID = sPart.sPartClassification_ID
+WHERE sDemandItemStatus.Issued = 1 and sPartClassification.Tool <> 1
 UNION
 SELECT '2',
        'Stock linked to Completed Demand Part records',
@@ -368,43 +376,7 @@ WHERE name = 'sp_InsertMissingStockRecord'
 )
     DROP PROCEDURE sup.sp_InsertMissingStockRecord;
 GO
-CREATE PROCEDURE [sup].[sp_InsertMissingStockRecord](@sOrderPartReceiptID INT)
-AS
-    BEGIN
-        INSERT INTO sStock
-        (sOrderPartReceipt_ID,
-         sBaseWarehouseLocation_ID,
-         sPartCondition_ID,
-         Qty,
-         BarCode,
-         GUID,
-         uRALUser_ID,
-         uRALUser_IDCreated,
-         RecordTimeStampCreated,
-         RecordTimeStamp
-        )
-        SELECT ID,
-               sBaseWarehouseLocation_ID,
-               sPartCondition_ID,
-               Qty,
-               BarCode,
-               NEWID(),
-               1,
-               1,
-               GETDATE(),
-               GETDATE()
-        FROM sOrderPartReceipt
-        WHERE sOrderPartReceipt.ID = @sOrderPartReceiptID;
-    END;
-GO
-EXEC sys.sp_addextendedproperty
-     @name = N'HelpText',
-     @value = N'Inserts a new stock record based on the receipt ID',
-     @level0type = N'SCHEMA',
-     @level0name = N'sup',
-     @level1type = N'PROCEDURE',
-     @level1name = N'sp_InsertMissingStockRecord';
-GO
+
 
 
 /*** Batch History ***/
