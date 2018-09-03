@@ -58,10 +58,12 @@ UPDATE sStock
 SET sDemandPart_ID = 0
 OUTPUT deleted.ID,'Remove FK to Issued sDemandPart','sStock'
 INTO @AuditHistoryPending
-FROM sStock
-JOIN sDemandPart ON sStock.sDemandPart_ID = sDemandPart.ID
-JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandPart.sDemandItemStatus_ID
-WHERE sDemandItemStatus.Issued = 1
+FROM sStock 
+JOIN sDemandPart ON sStock.sDemandPart_ID = sDemandPart.ID 
+JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandPart.sDemandItemStatus_ID 
+JOIN sPart on sPart_IDDemanded = sPart.ID
+JOIN sPartClassification on sPartClassification.ID = sPart.sPartClassification_ID
+WHERE sDemandItemStatus.Issued = 1 and sPartClassification.Tool <> 1
 
 
 /*Remove orphaned links to missing sDemandPart */
