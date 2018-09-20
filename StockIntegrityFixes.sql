@@ -1,5 +1,4 @@
-USE [RALSUN]
-GO
+
 
 /****** Object:  StoredProcedure [sup].[StockIntegrityMissingIssues]    Script Date: 20/09/2018 15:45:00 ******/
 SET ANSI_NULLS ON
