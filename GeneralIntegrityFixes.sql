@@ -83,6 +83,17 @@ INTO @AuditHistoryPending
 FROM uRALMenu
 WHERE NodeText LIKE '% & %'
 
+/* Fix Cancelled Demands with WIP or COS transaction (Zero Value Only) */
+UPDATE sDemandPart
+SET aTransaction_IDWIP = 0, aTransaction_IDCOS = 0
+OUTPUT deleted.ID,'Cancelled Demands with WIP or COS ','sDemandPart'
+INTO @AuditHistoryPending  
+FROM sDemandPart
+JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandItemStatus_ID
+WHERE(sDemandItemStatus.Issued = 0
+      AND sDemandItemStatus.Credit = 0)
+     AND (aTransaction_IDWIP + aTransaction_IDCOS > 0)
+     AND (AmountBaseWIP + AmountBaseCOS = 0);
 
 INSERT INTO sup.AuditHistory(BaseTable,BaseTableID,Fix)
 SELECT BaseTable,BaseTableID,Fix FROM @AuditHistoryPending

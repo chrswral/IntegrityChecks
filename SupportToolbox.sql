@@ -91,7 +91,7 @@ JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandItemStatus_ID
 WHERE(sDemandItemStatus.Issued = 0
       AND sDemandItemStatus.Credit = 0)
      AND (aTransaction_IDWIP + aTransaction_IDCOS > 0)
-     AND (AmountBaseWIP + AmountBaseCOS > 0)
+
 UNION
 SELECT '3',
        'Demands with WIP or COS created after the WIP or COS Journal',
@@ -841,7 +841,9 @@ CREATE VIEW sup.vDemandPart
 
 AS
 
-SELECT DemandNo, 
+SELECT 
+sDemandPart.ID
+DemandNo, 
 DemandItem+'\'+DemandItemSequence AS Item,
 sPart.PartNo,
 sPart.Description,
