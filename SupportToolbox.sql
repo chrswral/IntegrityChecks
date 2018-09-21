@@ -1068,6 +1068,31 @@ AS
         JOIN sys.schemas s ON s.schema_id = v.schema_id
         LEFT JOIN sys.extended_properties ep ON ep.major_id = v.object_id
         WHERE s.name = 'sup';
+
+		SELECT 
+		Left(@@Version,55) AS SQLVersion
+		,cpu_count
+		, physical_memory_kb
+		,virtual_machine_type
+		, virtual_machine_type_desc
+		FROM sys.dm_os_sys_info
+
+
+		SELECT name,
+		compatibility_level
+		, recovery_model_desc
+		, (SELECT CAST((SUM(size*8.0/1024/1024)) AS Decimal(10,2)) FROM sys.database_files) AS SizeInGB
+		, EnvisionVersion.*
+		, (SELECT COALESCE(CONVERT(VARCHAR(12), MAX(bus.backup_finish_date), 101),'-') AS LastBackUpTime
+			FROM sys.sysdatabases sdb
+			LEFT OUTER JOIN msdb.dbo.backupset bus ON bus.database_name = sdb.name
+			WHERE sdb.name = DB_NAME()
+			) AS LastBackup
+		FROM sys.databases
+		OUTER APPLY (select top 1 DatabaseVersion,LastUpdated from uRALDatabaseInfo order by ID desc) EnvisionVersion
+		WHERE name = DB_NAME()
+
+
     END;
 GO
 
