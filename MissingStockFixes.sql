@@ -157,7 +157,7 @@ BEGIN TRY
 		,sBaseWarehouseLocation_IDLast
 		,sStockOwnership_ID
 	)
-	OUTPUT inserted.ID,'Inserted: Missing Stock Record from sStockLog','sStock'
+	OUTPUT inserted.ID,'Inserted: Missing Stock Record from StockLog','sStock'
 	INTO @AuditHistoryPending   
 
 	SELECT TOP 1
