@@ -170,6 +170,16 @@ JOIN sDemandPart ON sStock.sDemandPart_ID = sDemandPart.ID
 JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandPart.sDemandItemStatus_ID
 WHERE sDemandItemStatus.Cancelled = 1
 
+UNION
+SELECT '2',
+       'Stock linked to Planned Demand Part records',
+       ISNULL(COUNT(sStock.ID), 0),
+       'SELECT sStock.ID, sDemandPart_ID FROM sStock JOIN sDemandPart ON sStock.sDemandPart_ID = sDemandPart.ID JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandPart.sDemandItemStatus_ID JOIN sPartTransactionType ON sPartTransactionType.ID = sPartTransactionType_ID WHERE sDemandItemStatus.Planned = 1 '
+FROM sStock
+JOIN sDemandPart ON sStock.sDemandPart_ID = sDemandPart.ID
+JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandPart.sDemandItemStatus_ID
+WHERE sDemandItemStatus.Planned = 1
+
 UNION 
 
 SELECT '3',

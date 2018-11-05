@@ -20,7 +20,7 @@ FROM sStock
 LEFT JOIN sOrderPartReceipt ON sStock.sOrderPartReceipt_ID = sOrderPartReceipt.ID
 WHERE sOrderPartReceipt.ID IS NULL
 
-/*Remove orphaned links to missing sDemandPart */
+/*Remove orphaned links to missing Stock Ownership */
 UPDATE sStock
 SET sStockOwnership_ID = sOrderPartReceipt.sStockOwnership_ID
 OUTPUT deleted.ID,'Missing Stock Ownership','sStock' 
@@ -65,6 +65,16 @@ JOIN sPart on sPart_IDDemanded = sPart.ID
 JOIN sPartClassification on sPartClassification.ID = sPart.sPartClassification_ID
 WHERE sDemandItemStatus.Issued = 1 and sPartClassification.Tool <> 1
 
+/*Remove FK to planned sDemandPart */
+UPDATE sStock
+SET sDemandPart_ID = 0
+OUTPUT deleted.ID,'Remove FK to planned sDemandPart','sStock'
+INTO @AuditHistoryPending
+FROM sStock
+JOIN sDemandPart ON sStock.sDemandPart_ID = sDemandPart.ID
+JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandPart.sDemandItemStatus_ID
+JOIN sPartTransactionType ON sPartTransactionType.ID = sPartTransactionType_ID
+WHERE sDemandItemStatus.Planned = 1 
 
 /*Remove orphaned links to missing sDemandPart */
 UPDATE sStock
