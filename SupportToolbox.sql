@@ -190,7 +190,19 @@ FROM sStockConfig
 GROUP BY ConfigName
 HAVING COUNT(ConfigName) > 1
 
+UNION
 
+SELECT '3', 
+       'Duplicate Barcodes', 
+       COUNT(*) AS 'Count', 'SELECT MAX (ID) ID FROM sStock GROUP BY BarCode HAVING COUNT(*) > 1',
+       'SELECT MAX (ID) ID FROM sStock GROUP BY BarCode HAVING COUNT(*) > 1'
+FROM
+(
+    SELECT MAX(ID) ID
+    FROM sStock
+    GROUP BY BarCode
+    HAVING COUNT(*) > 1
+) Stock
 
 UNION
 
