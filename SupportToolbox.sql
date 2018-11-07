@@ -194,7 +194,7 @@ UNION
 
 SELECT '3', 
        'Duplicate Barcodes', 
-       COUNT(*) AS 'Count', 'SELECT MAX (ID) ID FROM sStock GROUP BY BarCode HAVING COUNT(*) > 1',
+       COUNT(*) AS 'Count', 
        'SELECT MAX (ID) ID FROM sStock GROUP BY BarCode HAVING COUNT(*) > 1'
 FROM
 (
@@ -203,6 +203,20 @@ FROM
     GROUP BY BarCode
     HAVING COUNT(*) > 1
 ) Stock
+
+UNION
+
+SELECT '3', 
+       'Missing Barcodes', 
+       COUNT(*) AS 'Count', 
+       'SELECT sStock.ID FROM sStock WHERE BarCode = '''''
+FROM
+(
+    SELECT sStock.ID
+    FROM sStock
+    WHERE BarCode = ''
+) Stock
+
 
 UNION
 
