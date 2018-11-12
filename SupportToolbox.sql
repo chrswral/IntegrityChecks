@@ -299,6 +299,7 @@ EXEC sys.sp_addextendedproperty
 
 GO
 
+
 /*** Stock Integrity Checks ***/
 
 IF EXISTS
@@ -326,32 +327,16 @@ SELECT T.sOrderPartReceipt_ID,
        StockQty,
        IssueQty,
        ReceiptQty - StockQty - IssueQty AS Discrepancy,
-       'Stock Issue ' = CASE WHEN ReceiptQty > StockQty + IssueQty
-                            THEN 'Missing Stock' WHEN ReceiptQty < StockQty + IssueQty
-                            THEN 'Surplus Stock'
-                            ELSE 'Stock Integrity Error Further Investigation'
-                        END,
-       'Cause Of Issue' = CASE WHEN
-(
-SELECT COUNT(sOrderPartReceipt_ID)
-FROM sStockLog
-WHERE sStockLog.sOrderPartReceipt_ID = T.sOrderPartReceipt_ID
-) <= 0
-                              THEN 'Reciept Error' WHEN
-(
-SELECT MAX(sDemandPart.IssueDate)
-FROM sDemandPart
-WHERE sDemandPart.sOrderPartReceipt_ID = T.sOrderPartReceipt_ID
-) IS NULL
-                              THEN 'Allocation Error' WHEN
-(
-SELECT COUNT(sOrderPartReceipt_ID)
-FROM sStockLog
-WHERE sStockLog.sOrderPartReceipt_ID = T.sOrderPartReceipt_ID
-) > 0
-                              THEN 'Issue Error'
-                              ELSE 'Further Investigation is required'
-                          END
+      'Fix Required' = CASE 
+                            WHEN ReceiptQty > StockQty + IssueQty AND EXISTS(SELECT * 
+                                                                                 FROM sStockLog
+                                                                                 WHERE sOrderPartReceipt_ID = T.sOrderPartReceipt_ID )
+                            THEN 'Missing Stock Fix From Stock Log Proc'
+                            WHEN ReceiptQty > StockQty + IssueQty THEN 'Missing Stock Fix From sOrderPartReciept Proc'
+                            ELSE 'Not A Missing Stock Fix'                                                 
+--- NEW CASE LOGIC NEEDED TO WORK OUT WHICH FIX TO APPLY IF STOCK LOG RECORD EXISTS AND STOCK IS MISSING THEN USE Stock Log FIX IF MISSING AND NO STOCK LOG THEN FIX FROM ORDER RECIEPT
+
+                        END
 FROM
 (
 SELECT sOrderPartReceipt.ID AS sOrderPartReceipt_ID,
@@ -410,6 +395,7 @@ EXEC sys.sp_addextendedproperty
      @level1type = N'VIEW',
      @level1name = N'StockIntegrityCheck';
 GO
+
 
 /*** Insert missing stock records ***/
 
