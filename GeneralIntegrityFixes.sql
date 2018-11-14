@@ -1,3 +1,8 @@
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
 CREATE PROCEDURE sup.GeneralIntegrityFixes
 AS 
 
@@ -104,6 +109,55 @@ WHERE(sDemandItemStatus.Issued = 0
       AND sDemandItemStatus.Credit = 0)
      AND (aTransaction_IDWIP + aTransaction_IDCOS > 0)
      AND (AmountBaseWIP + AmountBaseCOS = 0);
+
+
+/* Remove duplicate barcodes*/
+UPDATE sStock 
+SET BarCode = ''
+OUTPUT deleted.ID, 'Duplicate Barcodes', 'sStock'
+INTO @AuditHistoryPending
+FROM sStock
+JOIN (SELECT MIN(ID) ID, BarCode
+    FROM sStock 
+    GROUP BY BarCode
+    HAVING COUNT(*) >1) bc ON bc.BarCode = sStock.BarCode
+WHERE bc.ID <> sStock.ID
+
+
+/* Fix missing barcodes*/
+
+    DECLARE @Updated table (ID int, BarCode varchar(10))
+    DECLARE @BarcodeDigits int = (SELECT TOP 1 CAST(ConfigValue AS int) FROM sStockConfig WHERE ConfigName = 'BarcodeDigits')
+    DECLARE @LastBarcode int = (SELECT TOP 1 CAST(ConfigValue AS int) FROM sStockConfig  WHERE ConfigName = 'LastBarcode')
+
+    /* Lock the stock config record */
+    UPDATE sStockConfig
+    SET RecordLocked = 1
+    FROM sStockConfig
+    WHERE ConfigName = 'LastBarcode'
+
+    /* Insert missing barcode */
+    UPDATE sStock
+    SET BarCode = ds.BarCode 
+    OUTPUT inserted.ID, inserted.BarCode
+    INTO @Updated
+    FROM sStock
+    JOIN (
+	   SELECT sStock.ID, RIGHT(REPLICATE('0',@BarcodeDigits) + CAST(@LastBarcode+ROW_NUMBER() OVER (ORDER BY sStock.ID) AS varchar(10)),@BarcodeDigits) AS BarCode
+	   FROM sStock
+	   WHERE BarCode = '') ds ON ds.ID = sStock.ID 
+    
+    /* Update last barcode and unlock*/
+    UPDATE sStockConfig
+    SET ConfigValue = (SELECT MAX(BarCode) FROM @Updated), RecordLocked = 0
+    FROM sStockConfig
+    WHERE ConfigName = 'LastBarcode'
+
+    /*Insert into Audit Table */
+    INSERT INTO @AuditHistoryPending
+    SELECT ID, 'Missing Barcodes', 'sStock'
+    FROM @Updated
+
 
 INSERT INTO sup.AuditHistory(BaseTable,BaseTableID,Fix)
 SELECT BaseTable,BaseTableID,Fix FROM @AuditHistoryPending
