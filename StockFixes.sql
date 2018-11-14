@@ -1,8 +1,4 @@
 /*-----CREATE MISSING STOCK RECORD FROM RECEIPT-----*/
-
-USE [***]
-GO
-
 /****** Object:  StoredProcedure [sup].[FixMissingStockFromReceipt]    Script Date: 25/10/2018 09:31:53 ******/
 SET ANSI_NULLS ON
 GO
@@ -12,6 +8,17 @@ GO
 
 
 --IF THERE IS NO STOCK LOG RECORD
+IF EXISTS (
+
+	SELECT * 
+	FROM sys.procedures
+	WHERE name = 'FixMissingStockFromReceipt'  
+)
+ 
+DROP PROCEDURE sup.FixMissingStockFromReceipt
+	
+	GO
+  
 CREATE PROC [sup].[FixMissingStockFromReceipt]  
 
 	 @sOrderPartReceiptID int
@@ -107,9 +114,6 @@ GO
 
 
 /*-----CREATE MISSING STOCK RECORD FROM sStockLog-----*/
-USE [***]
-GO
-
 /****** Object:  StoredProcedure [sup].[FixMissingStockFromReceipt]    Script Date: 25/10/2018 09:56:22 ******/
 SET ANSI_NULLS ON
 GO
@@ -119,9 +123,21 @@ GO
 
 
 --IF THERE IS NO STOCK LOG RECORD
-ALTER PROC [sup].[FixMissingStockFromStockLog]  
+IF EXISTS (
 
-	 @sOrderPartReceiptID int
+	SELECT * 
+	FROM sys.procedures
+	WHERE name = 'FixMissingStockFromStockLog'  
+)
+ 
+DROP PROCEDURE sup.FixMissingStockFromStockLog
+	
+	GO
+
+
+CREATE PROC [sup].[FixMissingStockFromStockLog]  
+
+	 @sStockLog int
 
  AS
 
@@ -140,8 +156,12 @@ BEGIN TRY
 	IF NOT EXISTS 
 		(SELECT sOrderPartReceipt_ID 
 		 FROM   sup.StockIntegrityCheck
-		 WHERE  sOrderPartReceipt_ID = @sOrderPartReceiptID)
-	THROW 50001, 'The Receipt ID provided does not exist as an integrity error',1
+		 WHERE  sOrderPartReceipt_ID IN 
+		 		(SELECT sOrderPartReceipt_ID 
+				 FROM   sStockLog 
+				 WHERE  sStockLog.ID = @sStockLog)
+				 )
+	THROW 50001, 'The sStock Log ID provided does not exist as an integrity error',1
 
 	INSERT INTO sStock
 	(
@@ -160,7 +180,7 @@ BEGIN TRY
 	OUTPUT inserted.ID,'Inserted: Missing Stock Record from StockLog','sStock'
 	INTO @AuditHistoryPending   
 
-	SELECT TOP 1
+SELECT TOP 1
 	 sStockLog.sOrderPartReceipt_ID
 	,sStockLog.sBaseWarehouseLocation_ID
 	,sStockLog.sPartCondition_ID
@@ -173,10 +193,11 @@ BEGIN TRY
 	,sStockLog.sBaseWarehouseLocation_ID
 	,sStockLog.sStockOwnership_ID
 	FROM sStockLog
-	JOIN sOrderReceiptNo on sOrderReceiptNo.ID = sStockLog.sOrderPartReceipt_ID
-	JOIN sOrderPartReceipt on sOrderPartReceipt.sOrderReceiptNo_ID = sOrderReceiptNo.ID
-	WHERE sStockLog.sOrderPartReceipt_ID = @sOrderPartReceiptID
+	JOIN sOrderPartReceipt ON sStockLog.sOrderPartReceipt_ID = sOrderPartReceipt.ID
+    JOIN sOrderReceiptNo ON sOrderPartReceipt.sOrderReceiptNo_ID = sOrderReceiptNo.ID
+	WHERE sStockLog.ID = @sStockLog
 	ORDER BY sStockLog.RecordTimeStampCreated DESC;
+
 
 	INSERT INTO sup.AuditHistory(BaseTable,BaseTableID,Fix)
 	SELECT BaseTable,BaseTableID,Fix FROM @AuditHistoryPending	
@@ -184,7 +205,11 @@ BEGIN TRY
 	IF EXISTS 
 		(SELECT sOrderPartReceipt_ID 
 		 FROM   sup.StockIntegrityCheck
-		 WHERE  sOrderPartReceipt_ID = @sOrderPartReceiptID)
+		 WHERE  sOrderPartReceipt_ID IN 
+		 		(SELECT sOrderPartReceipt_ID 
+				 FROM   sStockLog 
+				 WHERE  sStockLog.ID = @sStockLog)
+				 )
 	THROW 50004, 'The Receipt ID provided is still present in the stock integrity check, the insert will be rolled back',1
 
 	  COMMIT
