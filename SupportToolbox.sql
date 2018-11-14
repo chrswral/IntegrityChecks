@@ -141,27 +141,6 @@ FROM
        GROUP BY aTransaction_IDWIP, aT.AmountBase, JournalNo, aT.ID , aJ.RecordTimeStampCreated, aT.Credit
        HAVING SUM(Qty * (AmountBaseWIP)) <> (aT.AmountBase * IIF(aT.Credit=1,-1,1))
 ) ds
-
-UNION
-
-SELECT '3',
-       'Demand Parts not equal WIP PE',
-       ISNULL(COUNT(JournalNo), 0),
-       'SELECT JournalNo, SUM(Qty * (AmountBaseWIP+AmountBaseTransferCost)) sDemandPart_AmountBase, aT.AmountBase, aT.ID FROM sDemandPart sDP JOIN aTransaction aT ON aT.ID = aTransaction_IDWIP JOIN aJournalLine aJL ON aJL.ID = aJournalLine_ID JOIN aJournal aJ ON aJ.ID = aJournal_ID WHERE aT.AmountBase > 0 GROUP BY aTransaction_IDWIP, aT.AmountBase, JournalNo, aT.ID HAVING SUM(Qty * (AmountBaseWIP+AmountBaseTransferCost)) <> aT.AmountBase'
-FROM
-(
-SELECT JournalNo
-FROM sDemandPart
-JOIN aTransaction ON aTransaction.ID = aTransaction_IDWIP
-JOIN aJournalLine ON aJournalLine.ID = aJournalLine_ID
-JOIN aJournal ON aJournal.ID = aJournalLine.aJournal_ID
-WHERE aTransaction.AmountBase > 0
-GROUP BY aTransaction_IDWIP,
-         aTransaction.AmountBase,
-         JournalNo,
-         aTransaction.ID
-HAVING SUM(Qty * (AmountBaseWIP + AmountBaseTransferCost)) <> aTransaction.AmountBase
-) ds
 UNION
 SELECT '2',
        'Stock linked to missing Demand Part records',
