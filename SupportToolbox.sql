@@ -108,20 +108,38 @@ UNION
 SELECT '3',
        'Demand Parts not equal WIP PE',
        ISNULL(COUNT(JournalNo), 0),
-       'SELECT JournalNo, SUM(Qty * (AmountBaseWIP+AmountBaseTransferCost)) sDemandPart_AmountBase, aT.AmountBase, aT.ID FROM sDemandPart sDP JOIN aTransaction aT ON aT.ID = aTransaction_IDWIP JOIN aJournalLine aJL ON aJL.ID = aJournalLine_ID JOIN aJournal aJ ON aJ.ID = aJournal_ID WHERE aT.AmountBase > 0 GROUP BY aTransaction_IDWIP, aT.AmountBase, JournalNo, aT.ID HAVING SUM(Qty * (AmountBaseWIP+AmountBaseTransferCost)) <> aT.AmountBase'
+       'SELECT JournalNo, aJ.RecordTimeStampCreated,
+              SUM(Qty * (AmountBaseWIP)) sDemandPart_AmountBase, 
+              (aT.AmountBase * IIF(aT.Credit=1,-1,1)) AmountBase
+              , aT.ID 
+              FROM sDemandPart sDP 
+              JOIN aTransaction aT ON aT.ID = aTransaction_IDWIP 
+              JOIN aJournalLine aJL ON aJL.ID = aJournalLine_ID 
+              JOIN aJournal aJ ON aJ.ID = aJournal_ID 
+              JOIN aJournalRange aJR ON aJR.ID = aJ.aJournalRange_ID
+              JOIN aJournalType aJT ON aJT.ID = aJR.aJournalType_ID
+              WHERE aT.AmountBase > 0 
+              AND sDP.AmountBaseWIP > 0
+              AND aJT.NominalJournal = 1
+              GROUP BY aTransaction_IDWIP, aT.AmountBase, JournalNo, aT.ID , aJ.RecordTimeStampCreated, aT.Credit
+              HAVING SUM(Qty * (AmountBaseWIP)) <> (aT.AmountBase * IIF(aT.Credit=1,-1,1))'
 FROM
 (
-SELECT JournalNo
-FROM sDemandPart
-JOIN aTransaction ON aTransaction.ID = aTransaction_IDWIP
-JOIN aJournalLine ON aJournalLine.ID = aJournalLine_ID
-JOIN aJournal ON aJournal.ID = aJournalLine.aJournal_ID
-WHERE aTransaction.AmountBase > 0
-GROUP BY aTransaction_IDWIP,
-         aTransaction.AmountBase,
-         JournalNo,
-         aTransaction.ID
-HAVING SUM(Qty * (AmountBaseWIP + AmountBaseTransferCost)) <> aTransaction.AmountBase
+       SELECT JournalNo, aJ.RecordTimeStampCreated,
+       SUM(Qty * (AmountBaseWIP)) sDemandPart_AmountBase, 
+       (aT.AmountBase * IIF(aT.Credit=1,-1,1)) AmountBase
+       , aT.ID 
+       FROM sDemandPart sDP 
+       JOIN aTransaction aT ON aT.ID = aTransaction_IDWIP 
+       JOIN aJournalLine aJL ON aJL.ID = aJournalLine_ID 
+       JOIN aJournal aJ ON aJ.ID = aJournal_ID 
+       JOIN aJournalRange aJR ON aJR.ID = aJ.aJournalRange_ID
+       JOIN aJournalType aJT ON aJT.ID = aJR.aJournalType_ID
+       WHERE aT.AmountBase > 0 
+       AND sDP.AmountBaseWIP > 0
+       AND aJT.NominalJournal = 1
+       GROUP BY aTransaction_IDWIP, aT.AmountBase, JournalNo, aT.ID , aJ.RecordTimeStampCreated, aT.Credit
+       HAVING SUM(Qty * (AmountBaseWIP)) <> (aT.AmountBase * IIF(aT.Credit=1,-1,1))
 ) ds
 UNION
 SELECT '2',
@@ -185,7 +203,7 @@ UNION
 SELECT '3',
        'Duplicate Stock Config Settings',
        ISNULL(COUNT(sStockConfig.ID), 0),
-       'SELECT * FROM sStockConfig GROUP BY ConfigName HAVING COUNT(ConfigName) > 1'
+       'SELECT ConfigName FROM sStockConfig GROUP BY ConfigName HAVING COUNT(ConfigName) > 1'
 FROM sStockConfig
 GROUP BY ConfigName
 HAVING COUNT(ConfigName) > 1
