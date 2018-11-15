@@ -3,10 +3,6 @@ ALTER PROCEDURE sup.RGE
 
 AS
 
-SET XACT_ABORT ON
-
-BEGIN TRAN tTran
-
 UPDATE sStock
 SET sStock.BarCode = ''
 FROM sStock
@@ -49,6 +45,4 @@ JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandItemStatus_ID
 WHERE sDemandItemStatus.Cancelled = 0
 ORDER BY sStock.ID
 OFFSET 40 ROWS FETCH NEXT 5 ROWS ONLY)
-
-ROLLBACK TRANSACTION tTran
 
