@@ -3,7 +3,8 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE PROCEDURE sup.GeneralIntegrityFixes
+ALTER PROCEDURE sup.GeneralIntegrityFixes
+    @Commit int = 0
 AS 
 
 SET XACT_ABORT ON 
@@ -15,7 +16,7 @@ DECLARE @AuditHistoryPending TABLE (
     BaseTable VARCHAR(50)
 )
 
-BEGIN TRANSACTION
+BEGIN TRANSACTION SIFixes
 
 /* Delete Stock records without valid receipts */
 DELETE sStock
@@ -80,6 +81,16 @@ JOIN sDemandPart ON sStock.sDemandPart_ID = sDemandPart.ID
 JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandPart.sDemandItemStatus_ID
 JOIN sPartTransactionType ON sPartTransactionType.ID = sPartTransactionType_ID
 WHERE sDemandItemStatus.Planned = 1 
+
+/*Remove FK to planned sDemandPart */
+UPDATE sStock
+SET sDemandPart_ID = 0
+OUTPUT deleted.ID,'Remove FK to cancelled sDemandPart','sStock'
+INTO @AuditHistoryPending
+FROM sStock
+JOIN sDemandPart ON sStock.sDemandPart_ID = sDemandPart.ID
+JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandPart.sDemandItemStatus_ID
+WHERE sDemandItemStatus.Cancelled = 1 
 
 /*Remove orphaned links to missing sDemandPart */
 UPDATE sStock
@@ -162,9 +173,18 @@ WHERE bc.ID <> sStock.ID
 INSERT INTO sup.AuditHistory(BaseTable,BaseTableID,Fix)
 SELECT BaseTable,BaseTableID,Fix FROM @AuditHistoryPending
 
-COMMIT
+IF @Commit = 1
+BEGIN
+    COMMIT TRANSACTION SIFixes
+    SELECT '** COMMITTED **' AS Status
+    SELECT * FROM @AuditHistoryPending
+END
+ELSE
+BEGIN
+    SELECT '** ROLLING BACK **' AS Status
+    SELECT * FROM @AuditHistoryPending
+    SELECT * FROM sup.GeneralIntegrityChecks
+    ROLLBACK TRANSACTION SIFixes
 
-SELECT * FROM @AuditHistoryPending
-
-
+END
 GO

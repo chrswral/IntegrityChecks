@@ -132,7 +132,7 @@ FROM
        FROM sDemandPart sDP 
        JOIN aTransaction aT ON aT.ID = aTransaction_IDWIP 
        JOIN aJournalLine aJL ON aJL.ID = aJournalLine_ID 
-       JOIN aJournal aJ ON aJ.ID = aJournal_ID 
+       JOIN aJournal aJ ON aJ.ID = aJL.aJournal_ID 
        JOIN aJournalRange aJR ON aJR.ID = aJ.aJournalRange_ID
        JOIN aJournalType aJT ON aJT.ID = aJR.aJournalType_ID
        WHERE aT.AmountBase > 0 
@@ -271,10 +271,10 @@ FROM (  SELECT 'SP' AS Type,
         WHERE s.name = 'Support') ds
 UNION 
 
-SELECT '2',
-       'Bad Config Settings', 
-       ISNULL(COUNT(*),0),
-       'SELECT * FROM sup.BadConfig'
+SELECT '2' ,
+       'Bad Config Settings' , 
+       ISNULL(COUNT(*),0) ,
+       'SELECT * FROM sup.BadConfig' 
 FROM
 sup.BadConfig
 
@@ -293,13 +293,39 @@ FROM aTransaction
 JOIN lEmployeeDayHours ON lEmployeeDayHours.aTransaction_IDWIPWIPAccount = aTransaction.ID
 	OR lEmployeeDayHours.aTransaction_IDWIP = aTransaction.ID
 GROUP BY aTransaction.ID, aTransaction.AmountBase
-HAVING SUM(AmountBaseWIP) <> aTransaction.AmountBase
+HAVING SUM(AmountBaseWIP) <> aTransaction.AmountBase) ds
+
+
+UNION
+
+SELECT '2'
+        , 'Stock Integrity Errors'
+        , ISNULL(COUNT(T.sOrderPartReceipt_ID),0) 
+        , 'SELECT * FROM sup.StockIntegrityErrors'
+FROM
+(SELECT sOrderPartReceipt.ID AS sOrderPartReceipt_ID,
+       sOrderPartReceipt.Qty AS ReceiptQty,
+       ISNULL((SELECT SUM(Qty)
+             FROM dbo.sStock
+             WHERE(sOrderPartReceipt_ID = dbo.sOrderPartReceipt.ID)), 0) AS StockQty,
+       ISNULL((SELECT SUM(Qty)
+             FROM dbo.sDemandPart
+             WHERE(sOrderPartReceipt_ID = dbo.sOrderPartReceipt.ID)
+             AND ((sDemand_ID = -2)
+             OR (sDemandItemStatus_ID IN (SELECT ID FROM dbo.sDemandItemStatus WHERE((Issued = 1) OR (Credit = 1)))))), 0) AS IssueQty
+FROM dbo.sOrderPartReceipt
+INNER JOIN sOrderReceiptNo ON sOrderPartReceipt.sOrderReceiptNo_ID = sOrderReceiptNo.ID
+INNER JOIN sPart ON sOrderPartReceipt.sPart_ID = sPart.ID
+INNER JOIN sPartClassification ON sPart.sPartClassification_ID = sPartClassification.ID
+LEFT JOIN sOrderPartReceiptStatus ON sOrderPartReceiptStatus.ID = sOrderPartReceiptStatus_ID
+WHERE sOrderPartReceiptStatus.Inspection = 0
+      AND sPartClassification.Tool = 0
+) AS T
+WHERE T.ReceiptQty <> T.StockQty + T.IssueQty
+
+
+
 )ds
-
-
-)
-
- ds
 WHERE ds.ErrorCount > 0
 ORDER BY Priority;
 
