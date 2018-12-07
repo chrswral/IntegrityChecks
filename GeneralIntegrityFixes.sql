@@ -82,7 +82,7 @@ JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandPart.sDemandItemStatus_I
 JOIN sPartTransactionType ON sPartTransactionType.ID = sPartTransactionType_ID
 WHERE sDemandItemStatus.Planned = 1 
 
-/*Remove FK to planned sDemandPart */
+/*Remove FK to Cancelled sDemandPart */
 UPDATE sStock
 SET sDemandPart_ID = 0
 OUTPUT deleted.ID,'Remove FK to cancelled sDemandPart','sStock'
