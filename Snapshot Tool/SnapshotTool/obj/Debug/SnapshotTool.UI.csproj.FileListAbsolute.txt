@@ -13,3 +13,18 @@ C:\Users\kevin.cadd\source\repos\SnapshotTool\SnapshotTool\obj\Debug\SnapshotToo
 C:\Users\kevin.cadd\source\repos\SnapshotTool\SnapshotTool\bin\Debug\Dapper.dll
 C:\Users\kevin.cadd\source\repos\SnapshotTool\SnapshotTool\bin\Debug\Dapper.xml
 C:\Users\kevin.cadd\source\repos\SnapshotTool\SnapshotTool\obj\Debug\SnapshotTool.SnapshotTool.resources
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool\bin\Debug\SnapshotTool.exe.config
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool\bin\Debug\SnapshotTool.exe
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool\bin\Debug\SnapshotTool.pdb
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool\bin\Debug\Dapper.dll
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool\bin\Debug\SnapshotTool.DB.dll
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool\bin\Debug\SnapshotTool.DB.pdb
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool\bin\Debug\Dapper.xml
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool\obj\Debug\SnapshotTool.UI.csprojResolveAssemblyReference.cache
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool\obj\Debug\SnapshotTool.Properties.Resources.resources
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool\obj\Debug\SnapshotTool.SnapshotTool.resources
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool\obj\Debug\SnapshotTool.UI.csproj.GenerateResource.cache
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool\obj\Debug\SnapshotTool.UI.csproj.CoreCompileInputs.cache
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool\obj\Debug\SnapshotTool.UI.csproj.CopyComplete
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool\obj\Debug\SnapshotTool.exe
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool\obj\Debug\SnapshotTool.pdb

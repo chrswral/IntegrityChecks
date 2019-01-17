@@ -57,7 +57,7 @@ namespace SnapshotTool.DB.DataAccess
                                                                      GROUP BY
                                                                               source_database_id
                                                                      ) AS snapshots ON snapshots.source_database_id = databases.database_id
-                                                                WHERE database_id > 6
+                                                                WHERE (databases.name NOT IN ('master','model','msdb','tempdb') AND databases.name NOT LIKE 'ReportServer%')
                                                                       AND
                                                                       databases.source_database_id IS NULL;
                 ").ToList();

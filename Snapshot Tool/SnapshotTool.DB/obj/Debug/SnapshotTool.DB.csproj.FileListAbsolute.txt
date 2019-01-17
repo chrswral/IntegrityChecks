@@ -9,3 +9,14 @@ C:\Users\kevin.cadd\source\repos\SnapshotTool\SnapshotTool.DB\bin\Debug\Dapper.x
 C:\Users\kevin.cadd\source\repos\SnapshotTool\SnapshotTool.DB\obj\Debug\SnapshotTool.DB.csproj.CopyComplete
 C:\Users\kevin.cadd\source\repos\SnapshotTool\SnapshotTool.DB\obj\Debug\SnapshotTool.DB.Properties.Resources.resources
 C:\Users\kevin.cadd\source\repos\SnapshotTool\SnapshotTool.DB\obj\Debug\SnapshotTool.DB.csproj.GenerateResource.cache
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool.DB\bin\Debug\SnapshotTool.DB.dll
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool.DB\bin\Debug\SnapshotTool.DB.pdb
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool.DB\bin\Debug\Dapper.dll
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool.DB\bin\Debug\Dapper.xml
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool.DB\obj\Debug\SnapshotTool.DB.csprojResolveAssemblyReference.cache
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool.DB\obj\Debug\SnapshotTool.DB.Properties.Resources.resources
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool.DB\obj\Debug\SnapshotTool.DB.csproj.GenerateResource.cache
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool.DB\obj\Debug\SnapshotTool.DB.csproj.CoreCompileInputs.cache
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool.DB\obj\Debug\SnapshotTool.DB.csproj.CopyComplete
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool.DB\obj\Debug\SnapshotTool.DB.dll
+C:\Users\kevin.cadd\Source\Repos\chrswral\IntegrityChecks\Snapshot Tool\SnapshotTool.DB\obj\Debug\SnapshotTool.DB.pdb
