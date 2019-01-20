@@ -8,13 +8,13 @@ namespace SnapshotTool
 {
     public static class ExtensionMethods
     {
-        public static bool IsNullOrEmpty(this object obj)
+        public static bool IsNotNull(this bool? obj)
         {
-            bool result = true;
+            bool result = false;
         
-            if((object)obj?.GetType() == typeof(object))
+            if(obj != null)
             {
-                result = false;
+                result = true;
             }
 
             return result;

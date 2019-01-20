@@ -11,6 +11,11 @@ namespace SnapshotTool.DB.DataAccess
 {
      public class SqlConnector 
     {
+        /// <summary>
+        /// Gets the Server Information
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
         public ServerModel GetServerModel(ServerModel model)
         {
             using (IDbConnection connection = new System.Data.SqlClient.SqlConnection(GlobalConfig.CnnString("SnapshotToolSql")))
@@ -20,7 +25,11 @@ namespace SnapshotTool.DB.DataAccess
 
             return model;
         }
-         
+        /// <summary>
+        /// Gets all databases on a server
+        /// </summary>
+        /// <param name="databases"></param>
+        /// <returns></returns>
         public List<DatabaseModel> GetDatabase_All(List<DatabaseModel> databases)
         {
             using (IDbConnection connection = new System.Data.SqlClient.SqlConnection(GlobalConfig.CnnString("SnapshotToolSql")))
@@ -57,7 +66,7 @@ namespace SnapshotTool.DB.DataAccess
                                                                      GROUP BY
                                                                               source_database_id
                                                                      ) AS snapshots ON snapshots.source_database_id = databases.database_id
-                                                                WHERE (databases.name NOT IN ('master','model','msdb','tempdb') AND databases.name NOT LIKE 'ReportServer%')
+                                                                WHERE database_id > 6
                                                                       AND
                                                                       databases.source_database_id IS NULL;
                 ").ToList();
@@ -66,15 +75,15 @@ namespace SnapshotTool.DB.DataAccess
 
             return databases;
         }
-
-        public void CreateDatabaseSnapshot(ServerModel serverModel, DatabaseModel databaseModel, bool restoreFirst)
+        /// <summary>
+        /// Creates a snapshot of a Database
+        /// </summary>
+        /// <param name="serverModel"></param>
+        /// <param name="databaseModel"></param>
+        /// <param name="restoreFirst"></param>
+        public void CreateDatabaseSnapshot(ServerModel serverModel, DatabaseModel databaseModel)
         {
             string sql = "usp_createsnapshot";
-
-            if(databaseModel.Snapshots.Count() > 0)
-            {
-                this.RemoveDatabaseSnapshots(databaseModel, restoreFirst);
-            }
             
             using (IDbConnection connection = new System.Data.SqlClient.SqlConnection(GlobalConfig.CnnString("SnapshotToolSql")))
             {
@@ -83,8 +92,12 @@ namespace SnapshotTool.DB.DataAccess
 
             serverModel.Databases = this.GetDatabase_All(serverModel.Databases);
         }
-
-        public void RemoveDatabaseSnapshots(DatabaseModel databaseModel, bool restoreFirst)
+        /// <summary>
+        /// Removes a Database Snapshot
+        /// </summary>
+        /// <param name="databaseModel"></param>
+        /// <param name="restoreFirst"></param>
+        public void RemoveDatabaseSnapshots(DatabaseModel databaseModel, bool? restoreFirst)
         {
 
             using (IDbConnection connection = new System.Data.SqlClient.SqlConnection(GlobalConfig.CnnString("SnapshotToolSql")))
@@ -95,10 +108,11 @@ namespace SnapshotTool.DB.DataAccess
 
             bool drop = true;
 
-            if(restoreFirst)
+            if(restoreFirst == true)
             {
-                drop = this.RestoreSnapshot(databaseModel);
+                this.RestoreSnapshot(databaseModel);
             }
+
             if(drop)
             {
                 using (IDbConnection connection = new System.Data.SqlClient.SqlConnection(GlobalConfig.CnnString("SnapshotToolSql")))
@@ -112,8 +126,11 @@ namespace SnapshotTool.DB.DataAccess
                 }
             }
         }
-
-        public bool RestoreSnapshot(DatabaseModel databaseModel)
+        /// <summary>
+        /// Restores a Database to a Snapshot
+        /// </summary>
+        /// <param name="databaseModel"></param>
+        public void RestoreSnapshot(DatabaseModel databaseModel)
         {
             bool result = false;
             using (IDbConnection connection = new System.Data.SqlClient.SqlConnection(GlobalConfig.CnnString("SnapshotToolSql")))
@@ -138,9 +155,11 @@ namespace SnapshotTool.DB.DataAccess
                     var res3 = connection.Execute(sql3, commandType: CommandType.Text);
                 }
             }
-            return result;
         }
-
+        /// <summary>
+        /// Creates the Procedure for Creating a Snapshot on master
+        /// </summary>
+        /// <param name="serverModel"></param>
         public void CreateDatabaseSnapshotProcedure(ServerModel serverModel)
         {
             
@@ -238,7 +257,11 @@ namespace SnapshotTool.DB.DataAccess
                 connection.Execute(sql);
             }
         }
-
+        /// <summary>
+        /// Checks if the Create Snapshot Proc Exists
+        /// </summary>
+        /// <param name="serverModel"></param>
+        /// <returns></returns>
         public bool CheckStoredProcsExist(ServerModel serverModel)
         {
             bool res = false;
@@ -253,7 +276,12 @@ namespace SnapshotTool.DB.DataAccess
             }
             return res;
         }
-
+        /// <summary>
+        /// Gets a list of Snapshots linked to a Database
+        /// </summary>
+        /// <param name="snapshots"></param>
+        /// <param name="databaseModel"></param>
+        /// <returns></returns>
         public List<DatabaseModel> GetSnapshot_All (List<DatabaseModel> snapshots, DatabaseModel databaseModel)
         {
             using (IDbConnection connection = new System.Data.SqlClient.SqlConnection(GlobalConfig.CnnString("SnapshotToolSql")))

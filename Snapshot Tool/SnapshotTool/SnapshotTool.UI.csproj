@@ -51,6 +51,7 @@
       <HintPath>..\packages\Dapper.1.50.5\lib\net451\Dapper.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -64,6 +65,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="ChangeServer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ChangeServer.Designer.cs">
+      <DependentUpon>ChangeServer.cs</DependentUpon>
+    </Compile>
     <Compile Include="SnapshotTool.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -72,6 +79,9 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="ChangeServer.resx">
+      <DependentUpon>ChangeServer.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

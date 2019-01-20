@@ -16,7 +16,15 @@ namespace SnapshotTool
     {
         private ServerModel serverModel;
         private DatabaseModel databaseModel;
+        private enum dialogueActions { Idle, Create, Restore, Delete }
+        private enum confirmActions { Yes, No, Cancel };
+        private confirmActions? confirmAction;
+        private dialogueActions dialogueAction;
 
+        private enum databaseAction
+        {
+            create, restore, delete
+        }
         public SnapshotTool()
         {
             InitializeComponent();
@@ -62,29 +70,24 @@ namespace SnapshotTool
             var source = new BindingSource(bindingList,null);
             dgvSnapshotInfo.DataSource = source;
 
-            btnCreateSnapshot.Enabled = true;
             if(databaseModel.Snapshots.Count() > 0)
             {
+                btnCreateSnapshot.Enabled = false;
                 btnRestoreSnapshot.Enabled = true;
                 btnDeleteSnapshot.Enabled = true;
             } else
             {
+                btnCreateSnapshot.Enabled = true;
                 btnRestoreSnapshot.Enabled = false;
                 btnDeleteSnapshot.Enabled = false;
             }
         }
 
-        private void btnCreateSnapshot_Click(object sender, EventArgs e)
+        private async void btnCreateSnapshot_Click(object sender, EventArgs e)
         {
-            bool restoreFirst = false;
+            dialogueAction = dialogueActions.Create;
 
-            if(databaseModel.Snapshots.Count() > 0)
-            {
-                restoreFirst = confirmRestoreSnapshot("Restore To Recent Snapshot First", "Create New Snapshot");
-            }
-
-            GlobalConfig.Connection.CreateDatabaseSnapshot(serverModel, databaseModel, restoreFirst);
-            cbDatabases_SelectionChangeCommitted(null, null);
+            wireupDialogueActionButtons();
 
         }
 
@@ -95,41 +98,134 @@ namespace SnapshotTool
             if (box == DialogResult.Yes)
             {
                 GlobalConfig.Connection.CreateDatabaseSnapshotProcedure(serverModel);
+                confirmFinishedAction();
             }
+        }
+        private void wireupDialogueActionButtons()
+        {
+            pnlYesNoCancel.Visible = true;
+            btnYes.Enabled = false;
+            btnNo.Enabled = false;
+            btnCancel.Enabled = false;
+
+            switch (dialogueAction)
+            {
+                case dialogueActions.Idle:
+                    break;
+                case dialogueActions.Create:
+                    btnYes.Enabled = true;
+                    btnNo.Enabled = false;
+                    btnCancel.Enabled = true;
+                    labelConfirmMessage.Text = "Confirm Create Snapshot?";
+                    break;
+                case dialogueActions.Restore:
+                    btnYes.Enabled = true;
+                    btnNo.Enabled = false;
+                    btnCancel.Enabled = true;
+                    labelConfirmMessage.Text = "Confirm Snapshot Restore?";
+                    break;
+                case dialogueActions.Delete:
+                    btnYes.Enabled = true;
+                    btnNo.Enabled = true;
+                    btnCancel.Enabled = true;
+                    labelConfirmMessage.Text = "Restore Snapshot before deletion?";
+                    break;
+                default:
+                    break;
+            }
+        }
+        private bool? confirmDialogueAction(string text)
+        {
+            return null;
         }
 
-        private bool confirmRestoreSnapshot(string text, string caption)
+
+        private void confirmFinishedAction()
         {
-            bool result = false;
-            var box = MessageBox.Show(text, caption, MessageBoxButtons.YesNo);
-            if (box == DialogResult.Yes)
-            {
-                result = true;
-            }
-            return result;
+            MessageBox.Show("Finished!");
         }
 
-        private void btnRestoreSnapshot_Click(object sender, EventArgs e)
+        private async void btnRestoreSnapshot_Click(object sender, EventArgs e)
         {
-            if(confirmRestoreSnapshot("Restore to Recent Snapshot","Restore Snapshot"))
-            {
-                GlobalConfig.Connection.RestoreSnapshot(databaseModel);
-            }
-            cbDatabases_SelectionChangeCommitted(null, null);
+            dialogueAction = dialogueActions.Restore;
+            wireupDialogueActionButtons();
         }
+
 
         private void btnDeleteSnapshot_Click(object sender, EventArgs e)
         {
-            bool restoreFirst = false;
+            dialogueAction = dialogueActions.Delete;
+            wireupDialogueActionButtons();
+        }
 
-            if (databaseModel.Snapshots.Count() > 0)
+        private void labelServerName_Click(object sender, EventArgs e)
+        {
+            ChangeServer changeServer = new ChangeServer();
+            changeServer.Show();
+        }
+
+        private void labelServerName_MouseEnter(object sender, EventArgs e)
+        {
+            Cursor = Cursors.Hand;
+        }
+
+        private void labelServerName_MouseLeave(object sender, EventArgs e)
+        {
+            Cursor = Cursors.Arrow;
+        }
+
+        private async void btnYes_Click(object sender, EventArgs e)
+        {
+            switch (dialogueAction)
             {
-                restoreFirst = confirmRestoreSnapshot("Restore To Recent Snapshot First", "Create New Snapshot");
-            }
+                case dialogueActions.Create:
 
-            GlobalConfig.Connection.RemoveDatabaseSnapshots(databaseModel, restoreFirst);
+                    labelActive.Visible = true;
+                    labelActive.Text = "Creating Snapshot";
+                    await Task.Run(() => { GlobalConfig.Connection.CreateDatabaseSnapshot(serverModel, databaseModel); });
+                    labelActive.Visible = false;
+
+                    break;
+                case dialogueActions.Restore:
+                    labelActive.Visible = true;
+                    labelActive.Text = "Restoring Snapshot";
+                    await Task.Run(() => { GlobalConfig.Connection.RestoreSnapshot(databaseModel); });
+                    labelActive.Visible = false;
+                    break;
+                case dialogueActions.Delete:
+
+                    labelActive.Visible = true;
+                    labelActive.Text = "Deleting Snapshot";
+                    await Task.Run(() => { GlobalConfig.Connection.RemoveDatabaseSnapshots(databaseModel, true); });
+                    labelActive.Visible = false;
+
+                    break;
+            }
+            pnlYesNoCancel.Visible = false;
             cbDatabases_SelectionChangeCommitted(null, null);
 
+        }
+
+        private async void btnNo_Click(object sender, EventArgs e)
+        {
+            switch (dialogueAction)
+            {
+                case dialogueActions.Delete:
+                    labelActive.Visible = true;
+                    labelActive.Text = "Deleting Snapshot";
+                    await Task.Run(() => { GlobalConfig.Connection.RemoveDatabaseSnapshots(databaseModel, true); });
+                    labelActive.Visible = false;
+
+                    break;
+            }
+            pnlYesNoCancel.Visible = false;
+            cbDatabases_SelectionChangeCommitted(null, null);
+
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            pnlYesNoCancel.Visible = false;
         }
     }
 }
