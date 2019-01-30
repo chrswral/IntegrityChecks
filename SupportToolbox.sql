@@ -306,6 +306,31 @@ JOIN lEmployeeDayHours ON lEmployeeDayHours.aTransaction_IDWIPWIPAccount = aTran
 GROUP BY aTransaction.ID, aTransaction.AmountBase
 HAVING SUM(AmountBaseWIP) <> aTransaction.AmountBase) ds
 
+UNION 
+SELECT '2'
+      ,'Tools with staus Available but linked to completed tool issue requisition' 
+      ,ISNULL(COUNT(*),0)
+      ,'SELECT sStock.ID, tToolStatus.ID, tToolStatus.Status, sOrderPartReceipt.ID, sDemandPart.ID, sDemandItemStatus.ID, sDemandItemStatus.Status, *
+FROM tTool
+        JOIN sOrderPartReceipt ON sOrderPartReceipt.ID = tTool.sOrderPartReceipt_ID
+        JOIN tToolStatus ON tToolStatus.ID = tToolStatus_ID
+        JOIN sStock ON sStock.sOrderPartReceipt_ID = sOrderPartReceipt.ID
+        LEFT JOIN sDemandPart ON sStock.sDemandPart_ID = sDemandPart.ID
+        LEFT JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandItemStatus_ID
+        WHERE tToolStatus.ID = 1 AND sDemandItemStatus.ID = 13'
+
+FROM (SELECT sStock.ID, tToolStatus.ID, tToolStatus.Status, sOrderPartReceipt.ID, sDemandPart.ID, sDemandItemStatus.ID, sDemandItemStatus.Status, *
+FROM tTool
+JOIN sOrderPartReceipt ON sOrderPartReceipt.ID = tTool.sOrderPartReceipt_ID
+JOIN tToolStatus ON tToolStatus.ID = tToolStatus_ID
+JOIN sStock ON sStock.sOrderPartReceipt_ID = sOrderPartReceipt.ID
+LEFT JOIN sDemandPart ON sStock.sDemandPart_ID = sDemandPart.ID
+LEFT JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandItemStatus_ID
+WHERE tToolStatus.ID = 1 AND sDemandItemStatus.ID = 13
+) tc
+
+
+
 
 UNION
 

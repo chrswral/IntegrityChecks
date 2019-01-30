@@ -1,0 +1,9 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/Snapshot Tool/SnapshotTool/.vs/SnapshotTool/v15
+/Snapshot Tool/.vs/SnapshotTool/v15
+/Snapshot Tool/SnapshotTool/bin/Release
+bin/

@@ -1,0 +1,15 @@
+C:\Users\kevin.cadd\source\repos\SnapshotTool\SnapshotTool\bin\Release\SnapshotTool.exe.config
+C:\Users\kevin.cadd\source\repos\SnapshotTool\SnapshotTool\bin\Release\SnapshotTool.exe
+C:\Users\kevin.cadd\source\repos\SnapshotTool\SnapshotTool\bin\Release\SnapshotTool.pdb
+C:\Users\kevin.cadd\source\repos\SnapshotTool\SnapshotTool\bin\Release\Dapper.dll
+C:\Users\kevin.cadd\source\repos\SnapshotTool\SnapshotTool\bin\Release\SnapshotTool.DB.dll
+C:\Users\kevin.cadd\source\repos\SnapshotTool\SnapshotTool\bin\Release\SnapshotTool.DB.pdb
+C:\Users\kevin.cadd\source\repos\SnapshotTool\SnapshotTool\bin\Release\Dapper.xml
+C:\Users\kevin.cadd\source\repos\SnapshotTool\SnapshotTool\obj\Release\SnapshotTool.UI.csprojResolveAssemblyReference.cache
+C:\Users\kevin.cadd\source\repos\SnapshotTool\SnapshotTool\obj\Release\SnapshotTool.Properties.Resources.resources
+C:\Users\kevin.cadd\source\repos\SnapshotTool\SnapshotTool\obj\Release\SnapshotTool.SnapshotTool.resources
+C:\Users\kevin.cadd\source\repos\SnapshotTool\SnapshotTool\obj\Release\SnapshotTool.UI.csproj.GenerateResource.cache
+C:\Users\kevin.cadd\source\repos\SnapshotTool\SnapshotTool\obj\Release\SnapshotTool.UI.csproj.CoreCompileInputs.cache
+C:\Users\kevin.cadd\source\repos\SnapshotTool\SnapshotTool\obj\Release\SnapshotTool.UI.csproj.CopyComplete
+C:\Users\kevin.cadd\source\repos\SnapshotTool\SnapshotTool\obj\Release\SnapshotTool.exe
+C:\Users\kevin.cadd\source\repos\SnapshotTool\SnapshotTool\obj\Release\SnapshotTool.pdb
