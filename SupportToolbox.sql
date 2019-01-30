@@ -238,6 +238,17 @@ FROM
 
 UNION
 
+SELECT '2', 
+       'Missing Demand Statuses', 
+       COUNT(*) AS 'Count', 
+       'SELECT sDemandItemStatus_ID, * FROM sDemandPart WHERE sDemandItemStatus_ID = 0'
+FROM
+(
+    SELECT sDemandItemStatus_ID FROM sDemandPart WHERE sDemandItemStatus_ID = 0
+) Stock
+
+UNION
+
 SELECT '3', 'Old Support Schema Procs', ISNULL(COUNT(*),0), 'SELECT ''SP'' AS Type,
                p.name,
                ep.value
