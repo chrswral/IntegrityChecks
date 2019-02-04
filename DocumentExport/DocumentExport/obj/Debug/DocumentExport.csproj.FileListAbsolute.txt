@@ -1,0 +1,9 @@
+C:\Users\chrisw\Documents\Visual Studio 2017\Projects\DocumentExport\DocumentExport\obj\Debug\DocumentExport.csprojAssemblyReference.cache
+C:\Users\chrisw\Documents\Visual Studio 2017\Projects\DocumentExport\DocumentExport\obj\Debug\DocumentExport.csproj.CoreCompileInputs.cache
+C:\Users\chrisw\Documents\Visual Studio 2017\Projects\DocumentExport\DocumentExport\bin\Debug\DocumentExport.exe.config
+C:\Users\chrisw\Documents\Visual Studio 2017\Projects\DocumentExport\DocumentExport\bin\Debug\DocumentExport.exe
+C:\Users\chrisw\Documents\Visual Studio 2017\Projects\DocumentExport\DocumentExport\bin\Debug\DocumentExport.pdb
+C:\Users\chrisw\Documents\Visual Studio 2017\Projects\DocumentExport\DocumentExport\obj\Debug\DocumentExport.exe
+C:\Users\chrisw\Documents\Visual Studio 2017\Projects\DocumentExport\DocumentExport\obj\Debug\DocumentExport.pdb
+C:\Users\chrisw\Documents\Visual Studio 2017\Projects\DocumentExport\DocumentExport\bin\Debug\ICSharpCode.SharpZipLib.dll
+C:\Users\chrisw\Documents\Visual Studio 2017\Projects\DocumentExport\DocumentExport\obj\Debug\DocumentExport.csproj.CopyComplete
