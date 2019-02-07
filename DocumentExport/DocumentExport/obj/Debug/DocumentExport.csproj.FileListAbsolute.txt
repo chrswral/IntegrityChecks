@@ -7,3 +7,11 @@ C:\Users\chrisw\Documents\Visual Studio 2017\Projects\DocumentExport\DocumentExp
 C:\Users\chrisw\Documents\Visual Studio 2017\Projects\DocumentExport\DocumentExport\obj\Debug\DocumentExport.pdb
 C:\Users\chrisw\Documents\Visual Studio 2017\Projects\DocumentExport\DocumentExport\bin\Debug\ICSharpCode.SharpZipLib.dll
 C:\Users\chrisw\Documents\Visual Studio 2017\Projects\DocumentExport\DocumentExport\obj\Debug\DocumentExport.csproj.CopyComplete
+C:\Git\IntegrityChecks\DocumentExport\DocumentExport\bin\Debug\DocumentExport.exe.config
+C:\Git\IntegrityChecks\DocumentExport\DocumentExport\bin\Debug\DocumentExport.exe
+C:\Git\IntegrityChecks\DocumentExport\DocumentExport\bin\Debug\DocumentExport.pdb
+C:\Git\IntegrityChecks\DocumentExport\DocumentExport\bin\Debug\ICSharpCode.SharpZipLib.dll
+C:\Git\IntegrityChecks\DocumentExport\DocumentExport\obj\Debug\DocumentExport.csproj.CoreCompileInputs.cache
+C:\Git\IntegrityChecks\DocumentExport\DocumentExport\obj\Debug\DocumentExport.csproj.CopyComplete
+C:\Git\IntegrityChecks\DocumentExport\DocumentExport\obj\Debug\DocumentExport.exe
+C:\Git\IntegrityChecks\DocumentExport\DocumentExport\obj\Debug\DocumentExport.pdb

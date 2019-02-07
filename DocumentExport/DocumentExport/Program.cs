@@ -24,9 +24,13 @@ namespace DocumentExport
             string TableList = @"";
             string DocumentServer = @"";
             string DocumentDatabase = @"";
+            string IDFileLocation = @"";
+            string IDList = @"";
 
 
-            if (args.Length < 6)
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+
+            if (args.Length < 5)
             {
                 Console.WriteLine("Please specify startup parameters.");
                 Console.WriteLine(@"");
@@ -34,8 +38,11 @@ namespace DocumentExport
                 Console.WriteLine(@" -d DATABASE");
                 Console.WriteLine(@" -l SQL LOGIN");
                 Console.WriteLine(@" -p SQL PASSWORD");
-                Console.WriteLine(@" -t TABLE LIST (Optional)");
                 Console.WriteLine(@" -e EXPORT LOCATION");
+                Console.WriteLine(@" -dd DOCUMENT DATABASE (Optional)");
+                Console.WriteLine(@" -ds DOCUMENT SERVER (Optional)");
+                Console.WriteLine(@" -t TABLE LIST (Optional)");
+                Console.WriteLine(@" -f DOCUMENT ID LIST (Optional)");
                 Console.WriteLine(@"");
                 Console.WriteLine(@"E.g. DocumentExport.exe -s .\SQL2017 -d RALDAW -l RalWebClientAdmin -p ralwebclientadmin -t 'aJournalDocument','tCard' -e C:\ExportTest");
                 Console.WriteLine(@"");
@@ -46,12 +53,12 @@ namespace DocumentExport
                 return;
 
             }
-            
+
 
             for (int i = 0; i < args.Length; i++)
             {
                 //Console.WriteLine("args[{0}] == {1}", i, args[i]);
-                if(args[i].ToUpper() == "-S")
+                if (args[i].ToUpper() == "-S")
                 {
                     Server = args[i + 1].ToString();
                 }
@@ -92,6 +99,11 @@ namespace DocumentExport
                     DocumentDatabase = args[i + 1].ToString();
                 }
 
+                if (args[i].ToUpper() == "-F")
+                {
+                    IDFileLocation = args[i + 1].ToString();
+                }
+
             }
 
             if (DocumentServer== "")
@@ -104,70 +116,47 @@ namespace DocumentExport
                 DocumentDatabase = Database;
             }
 
-
-
-
+           
             try
             {
-                string CS = @"Data Source=" + Server + @";Initial Catalog=" + Database + @"; User ID=" + User + @"; Password="+Password;
+                string CS = @"Data Source=" + Server + @";Initial Catalog=" + Database + @"; User ID=" + User + @"; Password=" + Password;
                 string DCS = @"Data Source=" + DocumentServer + @";Initial Catalog=" + DocumentDatabase + @"; User ID=" + User + @"; Password=" + Password;
 
-                string tableQuery = "SELECT t.name TableName FROM sys.tables t JOIN sys.columns c ON c.object_id = t.object_id WHERE t.name LIKE '%Document%' AND c.name = 'tDocument_ID' ";
-
-                if (TableList != "")
+                if (IDList != "")
                 {
-                    tableQuery += " AND t.name IN (" + TableList + ")";
-
+                    GetDocsByID(IDList, CS, DCS);
                 }
-
-
-
-                var dataAdapter = new SqlDataAdapter(tableQuery, CS);
-                var commandBuilder = new SqlCommandBuilder(dataAdapter);
-                var TableListDS = new DataSet();
-                dataAdapter.Fill(TableListDS);
-
-
-                foreach (DataRow tableRow in TableListDS.Tables[0].Rows)
+                else if (IDFileLocation != "")
                 {
-                    string TableName = tableRow.Field<string>("TableName").ToString();
 
-                    string docQuery = "SELECT tDocument_ID FROM " + TableName + " WHERE tDocument_ID > 0";
-
-                    dataAdapter = new SqlDataAdapter(docQuery, CS);
-                    commandBuilder = new SqlCommandBuilder(dataAdapter);
-
-                    var DocListDS = new DataSet();
-                    dataAdapter.Fill(DocListDS);
-
-                    foreach (DataRow row in DocListDS.Tables[0].Rows)
+                    try
                     {
-                        string path = Globals.ExportDirectory + @"\" + TableName;
-                        if (!Directory.Exists(path))
-                        {
-                            DirectoryInfo di = Directory.CreateDirectory(path);
-                        }
 
-                        string DocID = row.Field<int>("tDocument_ID").ToString();
+                        //Read the file and display it line by line.
+                        StreamReader file = new StreamReader(IDFileLocation);
 
-                        
-                        Console.WriteLine("Getting Doc ID: " + DocID);
-                        Document myDoc = new Document(DCS, int.Parse(DocID));
+                        IDList = file.ReadLine();
 
-                        if (!File.Exists(path + @"\" + myDoc.ID.ToString() + " " + myDoc.FileName))
-                        {
-
-                            Console.WriteLine("Exporting: "+myDoc.FileName);
-                            myDoc.Export(path);
-                            
-                        }
-
+                        file.Close();
                     }
 
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                        Console.WriteLine(e.InnerException);
+                        Console.ReadKey();
+                    }
+
+                    GetDocsByID(IDList, CS, DCS);
 
                 }
+                else  /* Get everything */
+                {
+                    GetAllDocs(TableList, CS, DCS);
+                }
 
-
+                //Console.ForegroundColor = ConsoleColor.Black;
+                //Console.BackgroundColor= ConsoleColor.Green;
                 Console.WriteLine("Completed");
                 Console.ReadKey();
 
@@ -180,6 +169,96 @@ namespace DocumentExport
                 Console.ReadKey();
             }
             
+        }
+        private static void GetDocsByID(string IDList, string CS, string DCS)
+        {
+
+            string idQuery = "SELECT tDocument.ID FROM tDocument WHERE tDocument.ID IN ("+ IDList +")";
+            
+            var dataAdapter = new SqlDataAdapter(idQuery, CS);
+            var commandBuilder = new SqlCommandBuilder(dataAdapter);
+            var IDListDS = new DataSet();
+            dataAdapter.Fill(IDListDS);
+
+            foreach (DataRow row in IDListDS.Tables[0].Rows)
+            {
+                string path = Globals.ExportDirectory;
+                if (!Directory.Exists(path))
+                {
+                    DirectoryInfo di = Directory.CreateDirectory(path);
+                }
+
+                string DocID = row.Field<int>("ID").ToString();
+
+
+                Console.WriteLine("Getting Doc ID: " + DocID);
+                Document myDoc = new Document(DCS, int.Parse(DocID));
+
+                if (!File.Exists(path + @"\" + myDoc.ID.ToString() + " " + myDoc.FileName))
+                {
+
+                    Console.WriteLine("Exporting: " + myDoc.FileName);
+                    myDoc.Export(path);
+
+                }
+
+            }
+
+
+        }
+        private static void GetAllDocs(string TableList, string CS, string DCS)
+        {
+            string tableQuery = "SELECT t.name TableName FROM sys.tables t JOIN sys.columns c ON c.object_id = t.object_id WHERE t.name LIKE '%Document%' AND c.name = 'tDocument_ID' ";
+
+            if (TableList != "")
+            {
+                tableQuery += " AND t.name IN (" + TableList + ")";
+            }
+
+            var dataAdapter = new SqlDataAdapter(tableQuery, CS);
+            var commandBuilder = new SqlCommandBuilder(dataAdapter);
+            var TableListDS = new DataSet();
+            dataAdapter.Fill(TableListDS);
+
+
+            foreach (DataRow tableRow in TableListDS.Tables[0].Rows)
+            {
+                string TableName = tableRow.Field<string>("TableName").ToString();
+
+                string docQuery = "SELECT tDocument_ID FROM " + TableName + " WHERE tDocument_ID > 0";
+
+                dataAdapter = new SqlDataAdapter(docQuery, CS);
+                commandBuilder = new SqlCommandBuilder(dataAdapter);
+
+                var DocListDS = new DataSet();
+                dataAdapter.Fill(DocListDS);
+
+                foreach (DataRow row in DocListDS.Tables[0].Rows)
+                {
+                    string path = Globals.ExportDirectory + @"\" + TableName;
+                    if (!Directory.Exists(path))
+                    {
+                        DirectoryInfo di = Directory.CreateDirectory(path);
+                    }
+
+                    string DocID = row.Field<int>("tDocument_ID").ToString();
+
+
+                    Console.WriteLine("Getting Doc ID: " + DocID);
+                    Document myDoc = new Document(DCS, int.Parse(DocID));
+
+                    if (!File.Exists(path + @"\" + myDoc.ID.ToString() + " " + myDoc.FileName))
+                    {
+
+                        Console.WriteLine("Exporting: " + myDoc.FileName);
+                        myDoc.Export(path);
+
+                    }
+
+                }
+
+
+            }
         }
     }
 
