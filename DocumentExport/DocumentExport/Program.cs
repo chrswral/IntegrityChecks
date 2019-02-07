@@ -16,142 +16,132 @@ namespace DocumentExport
         
         static void Main(string[] args)
         {
-
-            string Server = @"support01\SQL2017";
-            string Database = @"SOLOMON";
-            string User = @"sa";
-            string Password = @"Rusada123";
-            string TableList = @"";
-            string DocumentServer = @"";
-            string DocumentDatabase = @"";
-            string IDFileLocation = @"";
-            string IDList = @"";
-
-
-            Console.ForegroundColor = ConsoleColor.DarkGreen;
-
-            if (args.Length < 5)
-            {
-                Console.WriteLine("Please specify startup parameters.");
-                Console.WriteLine(@"");
-                Console.WriteLine(@" -s SERVER");
-                Console.WriteLine(@" -d DATABASE");
-                Console.WriteLine(@" -l SQL LOGIN");
-                Console.WriteLine(@" -p SQL PASSWORD");
-                Console.WriteLine(@" -e EXPORT LOCATION");
-                Console.WriteLine(@" -dd DOCUMENT DATABASE (Optional)");
-                Console.WriteLine(@" -ds DOCUMENT SERVER (Optional)");
-                Console.WriteLine(@" -t TABLE LIST (Optional)");
-                Console.WriteLine(@" -f DOCUMENT ID LIST (Optional)");
-                Console.WriteLine(@"");
-                Console.WriteLine(@"E.g. DocumentExport.exe -s .\SQL2017 -d RALDAW -l RalWebClientAdmin -p ralwebclientadmin -t 'aJournalDocument','tCard' -e C:\ExportTest");
-                Console.WriteLine(@"");
-                Console.WriteLine(@"NOTE: Include spaces between command switch and parameter. E.g. -d RALDAW not -dRALDAW");
-
-                Console.ReadKey();
-
-                return;
-
-            }
-
-
-            for (int i = 0; i < args.Length; i++)
-            {
-                //Console.WriteLine("args[{0}] == {1}", i, args[i]);
-                if (args[i].ToUpper() == "-S")
-                {
-                    Server = args[i + 1].ToString();
-                }
-
-                if (args[i].ToUpper() == "-D")
-                {
-                    Database = args[i + 1].ToString();
-                }
-
-                if (args[i].ToUpper() == "-L")
-                {
-                    User = args[i + 1].ToString();
-                }
-
-                if (args[i].ToUpper() == "-P")
-                {
-                    Password = args[i + 1].ToString();
-                }
-
-                if (args[i].ToUpper() == "-E")
-                {
-                    //ExportDirectory = args[i + 1].ToString();
-                    Globals.ExportDirectory = args[i + 1].ToString();
-                }
-
-                if (args[i].ToUpper() == "-T")
-                {
-                    TableList = args[i + 1].ToString();
-                }
-
-                if (args[i].ToUpper() == "-DS")
-                {
-                    DocumentServer = args[i + 1].ToString();
-                }
-
-                if (args[i].ToUpper() == "-DD")
-                {
-                    DocumentDatabase = args[i + 1].ToString();
-                }
-
-                if (args[i].ToUpper() == "-F")
-                {
-                    IDFileLocation = args[i + 1].ToString();
-                }
-
-            }
-
-            if (DocumentServer== "")
-            {
-                DocumentServer = Server;
-            }
-
-            if (DocumentDatabase == "") ;
-            {
-                DocumentDatabase = Database;
-            }
-
-           
             try
             {
+                string Server = @"support01\SQL2017";
+                string Database = @"SOLOMON";
+                string User = @"sa";
+                string Password = @"Rusada123";
+                string TableList = @"";
+                string DocumentServer = @"";
+                string DocumentDatabase = @"";
+                string IDFileLocation = @"";
+                string IDList = @"";
+
+
+                Console.ForegroundColor = ConsoleColor.DarkGreen;
+
+                if (args.Length < 5)
+                {
+                    Console.WriteLine("Please specify startup parameters.");
+                    Console.WriteLine(@"");
+                    Console.WriteLine(@" -s SERVER");
+                    Console.WriteLine(@" -d DATABASE");
+                    Console.WriteLine(@" -l SQL LOGIN");
+                    Console.WriteLine(@" -p SQL PASSWORD");
+                    Console.WriteLine(@" -e EXPORT LOCATION");
+                    Console.WriteLine(@" -dd DOCUMENT DATABASE (Optional)");
+                    Console.WriteLine(@" -ds DOCUMENT SERVER (Optional)");
+                    Console.WriteLine(@" -t TABLE LIST (Optional)");
+                    Console.WriteLine(@" -f DOCUMENT ID LIST (Optional)");
+                    Console.WriteLine(@"");
+                    Console.WriteLine(@"E.g. DocumentExport.exe -s .\SQL2017 -d RALDAW -l RalWebClientAdmin -p ralwebclientadmin -t 'aJournalDocument','tCard' -e C:\ExportTest");
+                    Console.WriteLine(@"");
+                    Console.WriteLine(@"NOTE: Include spaces between command switch and parameter. E.g. -d RALDAW not -dRALDAW");
+
+                    Console.ReadKey();
+
+                    return;
+
+                }
+
+
+                for (int i = 0; i < args.Length; i++)
+                {
+                    //Console.WriteLine("args[{0}] == {1}", i, args[i]);
+                    if (args[i].ToUpper() == "-S")
+                    {
+                        Server = args[i + 1].ToString();
+                    }
+
+                    if (args[i].ToUpper() == "-D")
+                    {
+                        Database = args[i + 1].ToString();
+                    }
+
+                    if (args[i].ToUpper() == "-L")
+                    {
+                        User = args[i + 1].ToString();
+                    }
+
+                    if (args[i].ToUpper() == "-P")
+                    {
+                        Password = args[i + 1].ToString();
+                    }
+
+                    if (args[i].ToUpper() == "-E")
+                    {
+                        //ExportDirectory = args[i + 1].ToString();
+                        Globals.ExportDirectory = args[i + 1].ToString();
+                    }
+
+                    if (args[i].ToUpper() == "-T")
+                    {
+                        TableList = args[i + 1].ToString();
+                    }
+
+                    if (args[i].ToUpper() == "-DS")
+                    {
+                        DocumentServer = args[i + 1].ToString();
+                    }
+
+                    if (args[i].ToUpper() == "-DD")
+                    {
+                        DocumentDatabase = args[i + 1].ToString();
+                    }
+
+                    if (args[i].ToUpper() == "-F")
+                    {
+                        IDFileLocation = args[i + 1].ToString();
+                    }
+
+                }
+
+                if (DocumentServer== "")
+                {
+                    DocumentServer = Server;
+                }
+
+                if (DocumentDatabase == "") ;
+                {
+                    DocumentDatabase = Database;
+                }
+
                 string CS = @"Data Source=" + Server + @";Initial Catalog=" + Database + @"; User ID=" + User + @"; Password=" + Password;
                 string DCS = @"Data Source=" + DocumentServer + @";Initial Catalog=" + DocumentDatabase + @"; User ID=" + User + @"; Password=" + Password;
 
                 if (IDList != "")
                 {
+                    Console.WriteLine("ID list supplied as parameter");
                     GetDocsByID(IDList, CS, DCS);
                 }
                 else if (IDFileLocation != "")
                 {
+                    Console.WriteLine("ID file supplied");
 
-                    try
-                    {
+                    //Read the file and display it line by line.
+                    StreamReader file = new StreamReader(IDFileLocation);
 
-                        //Read the file and display it line by line.
-                        StreamReader file = new StreamReader(IDFileLocation);
+                    IDList = file.ReadLine();
 
-                        IDList = file.ReadLine();
-
-                        file.Close();
-                    }
-
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e.Message);
-                        Console.WriteLine(e.InnerException);
-                        Console.ReadKey();
-                    }
+                    file.Close();
 
                     GetDocsByID(IDList, CS, DCS);
 
                 }
                 else  /* Get everything */
                 {
+                    Console.WriteLine("No ID list or file list supplied, get everything");
                     GetAllDocs(TableList, CS, DCS);
                 }
 
