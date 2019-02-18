@@ -29,27 +29,42 @@ namespace SnapshotTool
         {
             InitializeComponent();
 
-            this.serverModel = new ServerModel();
-            serverModel = GlobalConfig.Connection.GetServerModel(serverModel);
-
-            if(serverModel.CurrentDatabase != "master")
-            {
-                throw new ArgumentException("Must Be Connected To [master] Database");
-            }
-
-            if(!GlobalConfig.Connection.CheckStoredProcsExist(serverModel))
-            {
-                GlobalConfig.Connection.CreateDatabaseSnapshotProcedure(serverModel);
-            }
-
             WireUpDialoge();
         }
 
         private void WireUpDialoge()
         {
+            this.serverModel = new ServerModel();
+            this.databaseModel = new DatabaseModel();
+            valueServerName.Text = null;
+            valueSqlVersionNo.Text = null;
+            cbDatabases.DataSource = null;
+            labelConfirmMessage.Text = null;
+
+            btnCreateSnapshot.Enabled = false;
+
+            cbDatabases_SelectionChangeCommitted(null, null);
+            try
+            {
+                serverModel = GlobalConfig.Connection.GetServerModel(serverModel);
+            } catch (System.Data.SqlClient.SqlException e )
+            {
+                labelConfirmMessage.Text = $"Cannot Connect to Sql: {e.Message}";
+                return;
+            }
+
+            if (serverModel.CurrentDatabase != "master")
+            {
+                throw new ArgumentException("Must Be Connected To [master] Database");
+            }
+
+            if (!GlobalConfig.Connection.CheckStoredProcsExist(serverModel))
+            {
+                GlobalConfig.Connection.CreateDatabaseSnapshotProcedure(serverModel);
+            }
+
             valueServerName.Text = serverModel.ServerName;
             valueSqlVersionNo.Text = serverModel.SqlVersionNumber;
-            valueCurrentDatabase.Text = serverModel.CurrentDatabase;
 
             serverModel.Databases = GlobalConfig.Connection.GetDatabase_All(serverModel.Databases).OrderBy(x => x.DatabaseName).ToList();
             cbDatabases.DataSource = serverModel.Databases;
@@ -61,23 +76,34 @@ namespace SnapshotTool
 
         private void cbDatabases_SelectionChangeCommitted(object sender, EventArgs e)
         {
-            this.databaseModel = (DatabaseModel)cbDatabases.SelectedItem;
-
-            databaseModel.Snapshots = GlobalConfig.Connection.GetSnapshot_All(databaseModel.Snapshots, databaseModel);
-        
-            dgvSnapshotInfo.AutoGenerateColumns = false;
-            var bindingList = new BindingList<DatabaseModel>(databaseModel.Snapshots);
-            var source = new BindingSource(bindingList,null);
-            dgvSnapshotInfo.DataSource = source;
-
-            if(databaseModel.Snapshots.Count() > 0)
+            if((DatabaseModel)cbDatabases.SelectedItem != null)
             {
-                btnCreateSnapshot.Enabled = false;
-                btnRestoreSnapshot.Enabled = true;
-                btnDeleteSnapshot.Enabled = true;
+                this.databaseModel = (DatabaseModel)cbDatabases.SelectedItem;
+            
+
+                databaseModel.Snapshots = GlobalConfig.Connection.GetSnapshot_All(databaseModel.Snapshots, databaseModel);
+        
+                dgvSnapshotInfo.AutoGenerateColumns = false;
+                var bindingList = new BindingList<DatabaseModel>(databaseModel.Snapshots);
+                var source = new BindingSource(bindingList,null);
+                dgvSnapshotInfo.DataSource = source;
+
+                if(databaseModel.Snapshots.Count() > 0)
+                {
+                    btnCreateSnapshot.Enabled = false;
+                    btnRestoreSnapshot.Enabled = true;
+                    btnDeleteSnapshot.Enabled = true;
+                } else
+                {
+                    btnCreateSnapshot.Enabled = true;
+                    btnRestoreSnapshot.Enabled = false;
+                    btnDeleteSnapshot.Enabled = false;
+                }
             } else
             {
-                btnCreateSnapshot.Enabled = true;
+                dgvSnapshotInfo.Rows.Clear();
+                dgvSnapshotInfo.Refresh();
+                btnCreateSnapshot.Enabled = false;
                 btnRestoreSnapshot.Enabled = false;
                 btnDeleteSnapshot.Enabled = false;
             }
@@ -158,22 +184,6 @@ namespace SnapshotTool
             wireupDialogueActionButtons();
         }
 
-        private void labelServerName_Click(object sender, EventArgs e)
-        {
-            ChangeServer changeServer = new ChangeServer();
-            changeServer.Show();
-        }
-
-        private void labelServerName_MouseEnter(object sender, EventArgs e)
-        {
-            Cursor = Cursors.Hand;
-        }
-
-        private void labelServerName_MouseLeave(object sender, EventArgs e)
-        {
-            Cursor = Cursors.Arrow;
-        }
-
         private async void btnYes_Click(object sender, EventArgs e)
         {
             switch (dialogueAction)
@@ -184,6 +194,7 @@ namespace SnapshotTool
                     labelActive.Text = "Creating Snapshot";
                     await Task.Run(() => { GlobalConfig.Connection.CreateDatabaseSnapshot(serverModel, databaseModel); });
                     labelActive.Visible = false;
+                    labelConfirmMessage.Text = null;
 
                     break;
                 case dialogueActions.Restore:
@@ -191,6 +202,7 @@ namespace SnapshotTool
                     labelActive.Text = "Restoring Snapshot";
                     await Task.Run(() => { GlobalConfig.Connection.RestoreSnapshot(databaseModel); });
                     labelActive.Visible = false;
+                    labelConfirmMessage.Text = null;
                     break;
                 case dialogueActions.Delete:
 
@@ -198,7 +210,7 @@ namespace SnapshotTool
                     labelActive.Text = "Deleting Snapshot";
                     await Task.Run(() => { GlobalConfig.Connection.RemoveDatabaseSnapshots(databaseModel, true); });
                     labelActive.Visible = false;
-
+                    labelConfirmMessage.Text = null;
                     break;
             }
             pnlYesNoCancel.Visible = false;
@@ -226,6 +238,18 @@ namespace SnapshotTool
         private void btnCancel_Click(object sender, EventArgs e)
         {
             pnlYesNoCancel.Visible = false;
+        }
+
+        private void preferencesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (ChangeServer changeServer = new ChangeServer())
+            {
+                changeServer.ShowDialog();
+                if(changeServer.saveClicked)
+                {
+                    WireUpDialoge();
+                }
+            }
         }
     }
 }

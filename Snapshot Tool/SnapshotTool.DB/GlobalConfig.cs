@@ -11,6 +11,7 @@ namespace SnapshotTool.DB
 {
     public static class GlobalConfig
     {
+        private static string connectionStringCustom;
 
         public static SqlConnector Connection { get; private set; }
         
@@ -22,7 +23,28 @@ namespace SnapshotTool.DB
 
         public static string CnnString(string name)
         {
-            return ConfigurationManager.ConnectionStrings[name].ConnectionString; 
+            if (connectionStringCustom == null)
+            {
+                return ConfigurationManager.ConnectionStrings[name].ConnectionString;
+            }
+            else
+            {
+                return connectionStringCustom;
+            }
+
         }
+        public static bool SetCustomCnnString(string connectionString)
+        {
+            try
+            {
+                SqlConnectionStringBuilder sqlConnectionString = new SqlConnectionStringBuilder(connectionString);
+            } catch (ArgumentException e)
+            {
+                return false;
+            }
+            connectionStringCustom = connectionString;
+            return true;
+        }
+
     }
 }
