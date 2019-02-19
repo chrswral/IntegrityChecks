@@ -179,7 +179,7 @@ namespace DocumentExport
                 }
 
                 string DocID = row.Field<int>("ID").ToString();
-
+                
 
                 Console.WriteLine("Getting Doc ID: " + DocID);
                 Document myDoc = new Document(DCS, int.Parse(DocID));
