@@ -19,6 +19,7 @@ namespace SnapshotTool
 
         private SqlConnectionStringBuilder sql;
 
+        public bool saveClicked;
         public ChangeServer()
         {
             InitializeComponent();
@@ -59,13 +60,13 @@ namespace SnapshotTool
         {
             if(boxAuthMethod.SelectedIndex == 0)
             {
-                sql.Authentication = SqlAuthenticationMethod.ActiveDirectoryIntegrated;
+                sql.IntegratedSecurity = true;
                 boxUsername.Enabled = false;
                 boxPassword.Enabled = false;
             }
             if(boxAuthMethod.SelectedIndex == 1)
             {
-                sql.Authentication = SqlAuthenticationMethod.SqlPassword;
+                sql.IntegratedSecurity = false;
                 boxUsername.Enabled = true;
                 boxPassword.Enabled = true;
             }
@@ -76,7 +77,8 @@ namespace SnapshotTool
             this.sql.DataSource = boxServer.Text;
             this.sql.UserID = boxUsername.Text;
             this.sql.Password = boxPassword.Text;
-            ConfigurationManager.ConnectionStrings["SnapshotToolSql"].ConnectionString = sql.ConnectionString;
+            GlobalConfig.SetCustomCnnString(sql.ConnectionString);
+            saveClicked = true;
             this.Close();
         }
     }
