@@ -8,14 +8,23 @@ using System.Data;
 using System.IO;
 using ICSharpCode.SharpZipLib.Zip.Compression;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
+using DocumentExport.Biz.BizLogic;
+using DocumentExport.Biz;
+using DocumentExport.Biz.Models;
+using log4net;
 
 namespace DocumentExport
 {
     class Program
     {
-        
+
+        private static readonly ILog _log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         static void Main(string[] args)
         {
+
+            _log.Info("Envision Document Exporter");
+
             try
             {
                 string Server = @"support01\SQL2017";
@@ -33,21 +42,21 @@ namespace DocumentExport
 
                 if (args.Length < 5)
                 {
-                    Console.WriteLine("Please specify startup parameters.");
-                    Console.WriteLine(@"");
-                    Console.WriteLine(@" -s SERVER");
-                    Console.WriteLine(@" -d DATABASE");
-                    Console.WriteLine(@" -l SQL LOGIN");
-                    Console.WriteLine(@" -p SQL PASSWORD");
-                    Console.WriteLine(@" -e EXPORT LOCATION");
-                    Console.WriteLine(@" -dd DOCUMENT DATABASE (Optional)");
-                    Console.WriteLine(@" -ds DOCUMENT SERVER (Optional)");
-                    Console.WriteLine(@" -t TABLE LIST (Optional)");
-                    Console.WriteLine(@" -f DOCUMENT ID LIST (Optional)");
-                    Console.WriteLine(@"");
-                    Console.WriteLine(@"E.g. DocumentExport.exe -s .\SQL2017 -d RALDAW -l RalWebClientAdmin -p ralwebclientadmin -t 'aJournalDocument','tCard' -e C:\ExportTest");
-                    Console.WriteLine(@"");
-                    Console.WriteLine(@"NOTE: Include spaces between command switch and parameter. E.g. -d RALDAW not -dRALDAW");
+                    _log.Info("Please specify startup parameters.");
+                    _log.Info(@"");
+                    _log.Info(@" -s SERVER");
+                    _log.Info(@" -d DATABASE");
+                    _log.Info(@" -l SQL LOGIN");
+                    _log.Info(@" -p SQL PASSWORD");
+                    _log.Info(@" -e EXPORT LOCATION");
+                    _log.Info(@" -dd DOCUMENT DATABASE (Optional)");
+                    _log.Info(@" -ds DOCUMENT SERVER (Optional)");
+                    _log.Info(@" -t TABLE LIST (Optional)");
+                    _log.Info(@" -f DOCUMENT ID LIST (Optional)");
+                    _log.Info(@"");
+                    _log.Info(@"E.g. DocumentExport.exe -s .\SQL2017 -d RALDAW -l RalWebClientAdmin -p ralwebclientadmin -t 'aJournalDocument','tCard' -e C:\ExportTest");
+                    _log.Info(@"");
+                    _log.Info(@"NOTE: Include spaces between command switch and parameter. E.g. -d RALDAW not -dRALDAW");
 
                     Console.ReadKey();
 
@@ -82,7 +91,7 @@ namespace DocumentExport
                     if (args[i].ToUpper() == "-E")
                     {
                         //ExportDirectory = args[i + 1].ToString();
-                        Globals.ExportDirectory = args[i + 1].ToString();
+                        GlobalConfig.SetDocumentExportDir(args[i + 1].ToString());
                     }
 
                     if (args[i].ToUpper() == "-T")
@@ -120,6 +129,9 @@ namespace DocumentExport
                 string CS = @"Data Source=" + Server + @";Initial Catalog=" + Database + @"; User ID=" + User + @"; Password=" + Password;
                 string DCS = @"Data Source=" + DocumentServer + @";Initial Catalog=" + DocumentDatabase + @"; User ID=" + User + @"; Password=" + Password;
 
+                GlobalConfig.AddConnectionString(CS, EnumModel.ServerTypes.EnvisionServer);
+                GlobalConfig.AddConnectionString(DCS, EnumModel.ServerTypes.DocumentServer);
+
                 if (IDList != "")
                 {
                     Console.WriteLine("ID list supplied as parameter");
@@ -141,21 +153,29 @@ namespace DocumentExport
                 }
                 else  /* Get everything */
                 {
-                    Console.WriteLine("No ID list or file list supplied, get everything");
-                    GetAllDocs(TableList, CS, DCS);
+                    _log.Info("No ID list or file list supplied, get everything");
+                    using(var documentBiz = new DocumentBiz())
+                    {
+
+                        var envisionTables = documentBiz.GetDocumentListFromTables(TableList);
+                        foreach(EnvisionTableModel envisionTableModel in envisionTables.Where(x => x.Documents.Count() > 0))
+                        {
+                            documentBiz.SaveTableDocuments(envisionTableModel);
+                        }
+                    }
                 }
 
                 //Console.ForegroundColor = ConsoleColor.Black;
                 //Console.BackgroundColor= ConsoleColor.Green;
-                Console.WriteLine("Completed");
+                _log.Info("Completed");
                 Console.ReadKey();
 
             }
             catch (Exception e)
             {
 
-                Console.WriteLine(e.Message);
-                Console.WriteLine(e.InnerException);
+                _log.Error($"Error Message: {e.Message}");
+                _log.Error($"Inner Exception: {e.InnerException}");
                 Console.ReadKey();
             }
             
@@ -193,8 +213,6 @@ namespace DocumentExport
                 }
 
             }
-
-
         }
         private static void GetAllDocs(string TableList, string CS, string DCS)
         {

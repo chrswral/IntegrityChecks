@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocumentExport", "DocumentE
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocumentExport.UI", "DocumentExport.UI\DocumentExport.UI.csproj", "{58DB6BC0-E40A-4DC8-AA22-6D27ABB28E61}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocumentExport.Biz", "DocumentExport.Biz\DocumentExport.Biz.csproj", "{F4FE31D0-05E6-4323-A8D9-BCC561D43387}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{58DB6BC0-E40A-4DC8-AA22-6D27ABB28E61}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{58DB6BC0-E40A-4DC8-AA22-6D27ABB28E61}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{58DB6BC0-E40A-4DC8-AA22-6D27ABB28E61}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4FE31D0-05E6-4323-A8D9-BCC561D43387}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4FE31D0-05E6-4323-A8D9-BCC561D43387}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4FE31D0-05E6-4323-A8D9-BCC561D43387}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4FE31D0-05E6-4323-A8D9-BCC561D43387}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

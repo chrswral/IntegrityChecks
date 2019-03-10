@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using SnapshotTool.DB;
 using SnapshotTool.DB.Model;
+using log4net;
 
 namespace SnapshotTool
 {
@@ -20,6 +21,7 @@ namespace SnapshotTool
         private enum confirmActions { Yes, No, Cancel };
         private confirmActions? confirmAction;
         private dialogueActions dialogueAction;
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
         private enum databaseAction
         {
@@ -34,6 +36,7 @@ namespace SnapshotTool
 
         private void WireUpDialoge()
         {
+            log.Info("Wire Up Dialoge");
             this.serverModel = new ServerModel();
             this.databaseModel = new DatabaseModel();
             valueServerName.Text = null;
@@ -180,12 +183,14 @@ namespace SnapshotTool
 
         private void btnDeleteSnapshot_Click(object sender, EventArgs e)
         {
+            log.Debug("User Clicked Delete");
             dialogueAction = dialogueActions.Delete;
             wireupDialogueActionButtons();
         }
 
         private async void btnYes_Click(object sender, EventArgs e)
         {
+            log.Debug("User Clicked Yes");
             switch (dialogueAction)
             {
                 case dialogueActions.Create:
@@ -220,12 +225,13 @@ namespace SnapshotTool
 
         private async void btnNo_Click(object sender, EventArgs e)
         {
+            log.Debug("User Clicked No");
             switch (dialogueAction)
             {
                 case dialogueActions.Delete:
                     labelActive.Visible = true;
                     labelActive.Text = "Deleting Snapshot";
-                    await Task.Run(() => { GlobalConfig.Connection.RemoveDatabaseSnapshots(databaseModel, true); });
+                    await Task.Run(() => { GlobalConfig.Connection.RemoveDatabaseSnapshots(databaseModel, false); });
                     labelActive.Visible = false;
 
                     break;
@@ -237,6 +243,7 @@ namespace SnapshotTool
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
+            log.Debug("User Clicked Cancel");
             pnlYesNoCancel.Visible = false;
         }
 

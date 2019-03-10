@@ -1,0 +1,14 @@
+C:\Users\kevin.cadd\source\repos\chrswral\MaintenanceItemChecker\MaintenanceItemChecker\bin\Release\log4net.config
+C:\Users\kevin.cadd\source\repos\chrswral\MaintenanceItemChecker\MaintenanceItemChecker\bin\Release\MaintenanceItemChecker.exe.config
+C:\Users\kevin.cadd\source\repos\chrswral\MaintenanceItemChecker\MaintenanceItemChecker\bin\Release\MaintenanceItemChecker.exe
+C:\Users\kevin.cadd\source\repos\chrswral\MaintenanceItemChecker\MaintenanceItemChecker\bin\Release\MaintenanceItemChecker.pdb
+C:\Users\kevin.cadd\source\repos\chrswral\MaintenanceItemChecker\MaintenanceItemChecker\bin\Release\EPPlus.dll
+C:\Users\kevin.cadd\source\repos\chrswral\MaintenanceItemChecker\MaintenanceItemChecker\bin\Release\log4net.dll
+C:\Users\kevin.cadd\source\repos\chrswral\MaintenanceItemChecker\MaintenanceItemChecker\bin\Release\EPPlus.xml
+C:\Users\kevin.cadd\source\repos\chrswral\MaintenanceItemChecker\MaintenanceItemChecker\bin\Release\log4net.xml
+C:\Users\kevin.cadd\source\repos\chrswral\MaintenanceItemChecker\MaintenanceItemChecker\obj\Release\MaintenanceItemChecker.csproj.ResolveComReference.cache
+C:\Users\kevin.cadd\source\repos\chrswral\MaintenanceItemChecker\MaintenanceItemChecker\obj\Release\MaintenanceItemChecker.csproj.CoreCompileInputs.cache
+C:\Users\kevin.cadd\source\repos\chrswral\MaintenanceItemChecker\MaintenanceItemChecker\obj\Release\MaintenanceItemChecker.csproj.CopyComplete
+C:\Users\kevin.cadd\source\repos\chrswral\MaintenanceItemChecker\MaintenanceItemChecker\obj\Release\MaintenanceItemChecker.exe
+C:\Users\kevin.cadd\source\repos\chrswral\MaintenanceItemChecker\MaintenanceItemChecker\obj\Release\MaintenanceItemChecker.pdb
+C:\Users\kevin.cadd\source\repos\chrswral\MaintenanceItemChecker\MaintenanceItemChecker\obj\Release\MaintenanceItemChecker.csprojAssemblyReference.cache

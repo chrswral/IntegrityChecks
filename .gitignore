@@ -22,3 +22,6 @@ bin/
 /DocumentExport/DocumentExport/obj/Debug/DocumentExport.csproj.FileListAbsolute.txt
 /DocumentExport/DocumentExport/obj/Debug/DocumentExport.exe
 /DocumentExport/DocumentExport/obj/Debug/DocumentExport.pdb
+/MaintenanceItemChecker/.vs/MaintenanceItemChecker/v15
+/SupportToolApp
+/.gitattributes

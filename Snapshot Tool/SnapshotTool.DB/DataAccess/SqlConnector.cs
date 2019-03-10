@@ -11,6 +11,7 @@ namespace SnapshotTool.DB.DataAccess
 {
      public class SqlConnector 
     {
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         /// <summary>
         /// Gets the Server Information
         /// </summary>
@@ -18,10 +19,12 @@ namespace SnapshotTool.DB.DataAccess
         /// <returns></returns>
         public ServerModel GetServerModel(ServerModel model)
         {
+            log.Debug($"Entering Method {System.Reflection.MethodBase.GetCurrentMethod().Name}");
             using (IDbConnection connection = new System.Data.SqlClient.SqlConnection(GlobalConfig.CnnString("SnapshotToolSql")))
             {
                 model = connection.Query<ServerModel>("SELECT @@SERVERNAME AS ServerName, SERVERPROPERTY('productversion') AS SqlVersionNumber, DB_NAME() AS CurrentDatabase").FirstOrDefault();
             }
+            log.Debug($"Leaving Method {System.Reflection.MethodBase.GetCurrentMethod().Name}");
 
             return model;
         }
@@ -32,6 +35,7 @@ namespace SnapshotTool.DB.DataAccess
         /// <returns></returns>
         public List<DatabaseModel> GetDatabase_All(List<DatabaseModel> databases)
         {
+            log.Debug($"Entering Method {System.Reflection.MethodBase.GetCurrentMethod().Name}");
             using (IDbConnection connection = new System.Data.SqlClient.SqlConnection(GlobalConfig.CnnString("SnapshotToolSql")))
             {
                 databases = connection.Query<DatabaseModel>(@"
@@ -66,13 +70,13 @@ namespace SnapshotTool.DB.DataAccess
                                                                      GROUP BY
                                                                               source_database_id
                                                                      ) AS snapshots ON snapshots.source_database_id = databases.database_id
-                                                                WHERE database_id > 6
+                                                                WHERE database_id > 4
                                                                       AND
                                                                       databases.source_database_id IS NULL;
                 ").ToList();
 
             }
-
+            log.Debug($"Leaving Method {System.Reflection.MethodBase.GetCurrentMethod().Name}");
             return databases;
         }
         /// <summary>
@@ -83,6 +87,7 @@ namespace SnapshotTool.DB.DataAccess
         /// <param name="restoreFirst"></param>
         public void CreateDatabaseSnapshot(ServerModel serverModel, DatabaseModel databaseModel)
         {
+            log.Debug($"Entering Method {System.Reflection.MethodBase.GetCurrentMethod().Name}");
             string sql = "usp_createsnapshot";
             
             using (IDbConnection connection = new System.Data.SqlClient.SqlConnection(GlobalConfig.CnnString("SnapshotToolSql")))
@@ -91,6 +96,8 @@ namespace SnapshotTool.DB.DataAccess
             }
 
             serverModel.Databases = this.GetDatabase_All(serverModel.Databases);
+            log.Debug($"Leaving Method {System.Reflection.MethodBase.GetCurrentMethod().Name}");
+
         }
         /// <summary>
         /// Removes a Database Snapshot
@@ -99,7 +106,7 @@ namespace SnapshotTool.DB.DataAccess
         /// <param name="restoreFirst"></param>
         public void RemoveDatabaseSnapshots(DatabaseModel databaseModel, bool? restoreFirst)
         {
-
+            log.Debug($"Entering Method {System.Reflection.MethodBase.GetCurrentMethod().Name}");
             using (IDbConnection connection = new System.Data.SqlClient.SqlConnection(GlobalConfig.CnnString("SnapshotToolSql")))
             {
                 string sql = @"SELECT name DatabaseName, create_date CreatedDate FROM sys.databases WHERE source_database_id = @ID";
@@ -125,6 +132,7 @@ namespace SnapshotTool.DB.DataAccess
                     }
                 }
             }
+            log.Debug($"Leaving Method {System.Reflection.MethodBase.GetCurrentMethod().Name}");
         }
         /// <summary>
         /// Restores a Database to a Snapshot
@@ -132,6 +140,7 @@ namespace SnapshotTool.DB.DataAccess
         /// <param name="databaseModel"></param>
         public void RestoreSnapshot(DatabaseModel databaseModel)
         {
+            log.Debug($"Entering Method {System.Reflection.MethodBase.GetCurrentMethod().Name}");
             bool result = false;
             using (IDbConnection connection = new System.Data.SqlClient.SqlConnection(GlobalConfig.CnnString("SnapshotToolSql")))
             {
@@ -148,13 +157,15 @@ namespace SnapshotTool.DB.DataAccess
                 }
                 catch (Exception ex)
                 {
-
+                    log.Error($"System Error: {ex.Message}");
+                    log.Error($"System Error: {ex.InnerException}");
                 }
                 finally
                 {
                     var res3 = connection.Execute(sql3, commandType: CommandType.Text);
                 }
             }
+            log.Debug($"Leaving Method {System.Reflection.MethodBase.GetCurrentMethod().Name}");
         }
         /// <summary>
         /// Creates the Procedure for Creating a Snapshot on master
@@ -162,13 +173,15 @@ namespace SnapshotTool.DB.DataAccess
         /// <param name="serverModel"></param>
         public void CreateDatabaseSnapshotProcedure(ServerModel serverModel)
         {
-            
+            log.Debug($"Entering Method {System.Reflection.MethodBase.GetCurrentMethod().Name}");
+
             //Check if SP Exists, and drop it if it does.
-            if(CheckStoredProcsExist(serverModel))
+            if (CheckStoredProcsExist(serverModel))
             {
                 string sql = "DROP PROCEDURE usp_createsnapshot";
                 using (IDbConnection connection = new System.Data.SqlClient.SqlConnection(GlobalConfig.CnnString("SnapshotToolSql")))
                 {
+                    log.Info($"DROP usp_createsnapshot Stored Proc on master DB");
                     connection.Execute(sql);
                 }
             }
@@ -254,8 +267,12 @@ namespace SnapshotTool.DB.DataAccess
                             ';
 
                               ";
+                log.Info($"Create usp_createsnapshot Stored Proc on master DB");
+
                 connection.Execute(sql);
             }
+            log.Debug($"Leaving Method {System.Reflection.MethodBase.GetCurrentMethod().Name}");
+
         }
         /// <summary>
         /// Checks if the Create Snapshot Proc Exists
@@ -264,6 +281,8 @@ namespace SnapshotTool.DB.DataAccess
         /// <returns></returns>
         public bool CheckStoredProcsExist(ServerModel serverModel)
         {
+            log.Debug($"Entering Method {System.Reflection.MethodBase.GetCurrentMethod().Name}");
+
             bool res = false;
 
             using (IDbConnection connection = new System.Data.SqlClient.SqlConnection(GlobalConfig.CnnString("SnapshotToolSql")))
@@ -271,9 +290,11 @@ namespace SnapshotTool.DB.DataAccess
                 var query = connection.ExecuteScalar("SELECT name FROM sys.procedures WHERE name = 'usp_createsnapshot'");
                 if((string)query == "usp_createsnapshot")
                 {
+                    log.Info("Stored Proc Exists");
                     res = true;
                 }
             }
+            log.Debug($"Leaving Method {System.Reflection.MethodBase.GetCurrentMethod().Name}");
             return res;
         }
         /// <summary>
@@ -284,6 +305,7 @@ namespace SnapshotTool.DB.DataAccess
         /// <returns></returns>
         public List<DatabaseModel> GetSnapshot_All (List<DatabaseModel> snapshots, DatabaseModel databaseModel)
         {
+            log.Debug($"Entering Method {System.Reflection.MethodBase.GetCurrentMethod().Name}");
             using (IDbConnection connection = new System.Data.SqlClient.SqlConnection(GlobalConfig.CnnString("SnapshotToolSql")))
             {
                 snapshots = connection.Query<DatabaseModel>(@"SELECT
@@ -320,7 +342,7 @@ namespace SnapshotTool.DB.DataAccess
                                                                       AND
                                                                       databases.source_database_id = @source_database_id", new { source_database_id = databaseModel.ID })?.OrderByDescending(x => x.CreatedDate).ToList();
             }
-
+            log.Debug($"Leaving Method {System.Reflection.MethodBase.GetCurrentMethod().Name}");
             return snapshots;
         }
     }

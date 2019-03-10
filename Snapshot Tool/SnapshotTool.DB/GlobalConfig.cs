@@ -14,7 +14,8 @@ namespace SnapshotTool.DB
         private static string connectionStringCustom;
 
         public static SqlConnector Connection { get; private set; }
-        
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         public static void Connect()
         {
             SqlConnector sql = new SqlConnector();
@@ -31,10 +32,10 @@ namespace SnapshotTool.DB
             {
                 return connectionStringCustom;
             }
-
         }
         public static bool SetCustomCnnString(string connectionString)
         {
+            log.Debug($"Entering Method {System.Reflection.MethodBase.GetCurrentMethod().Name}");
             try
             {
                 SqlConnectionStringBuilder sqlConnectionString = new SqlConnectionStringBuilder(connectionString);
@@ -43,6 +44,7 @@ namespace SnapshotTool.DB
                 return false;
             }
             connectionStringCustom = connectionString;
+            log.Debug($"Leaving Method {System.Reflection.MethodBase.GetCurrentMethod().Name}");
             return true;
         }
 
