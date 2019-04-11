@@ -13,7 +13,7 @@ CREATE TABLE sup.AuditHistory(
 
 
 GO
----Liam is a bit weird 
+ 
 /*** General Integrity Checks ***/
 IF EXISTS
 (
