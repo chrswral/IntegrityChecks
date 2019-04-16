@@ -13,7 +13,7 @@ CREATE TABLE sup.AuditHistory(
 
 
 GO
-
+ 
 /*** General Integrity Checks ***/
 IF EXISTS
 (
