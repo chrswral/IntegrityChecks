@@ -50,12 +50,15 @@ SELECT sOrderPartReceipt.ID AS sOrderPartReceipt_ID,
              FROM dbo.sPartDespatch
              WHERE(sOrderPartReceipt_ID = sOrderPartReceipt.ID)
              ), 0) AS DespatchQty,
-       ISNULL(
-             (
-             SELECT SUM(Qty)
-             FROM dbo.sPartWriteOff
-             WHERE(sOrderPartReceipt_ID = sOrderPartReceipt.ID)
-             ), 0) AS WriteOffQty			 
+	ISNULL(
+		(			 
+		SELECT (SUM(IIF( sReasonCode.WriteOff = 1, sPartWriteOff.Qty , sPartWriteOff.Qty *-1)) ) 
+		FROM dbo.sPartWriteOff
+		JOIN sReasonCode ON sPartWriteOff.sReasonCode_ID = sReasonCode.ID
+            WHERE(sOrderPartReceipt_ID = sOrderPartReceipt.ID)
+             ), 0) AS WriteOffQty
+
+
 FROM dbo.sOrderPartReceipt
 INNER JOIN sOrderReceiptNo ON sOrderPartReceipt.sOrderReceiptNo_ID = sOrderReceiptNo.ID
 INNER JOIN sPart ON sOrderPartReceipt.sPart_ID = sPart.ID
@@ -71,6 +74,7 @@ WHERE sOrderPartReceiptStatus_ID IN
    
 ) AS T(sOrderPartReceipt_ID, PartNo, ReceiptNo, ReceiptDate, SerialNo, ReceiptQty, StockQty, IssueQty, DespatchQty, WriteOffQty)
 WHERE ReceiptQty - StockQty - IssueQty - DespatchQty - WriteOffQty <> 0;
-GO
+
+
 
 
