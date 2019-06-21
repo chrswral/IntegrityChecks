@@ -2,21 +2,25 @@
 
 BEGIN TRAN
 
-SELECT *
+SELECT ID,*
 FROM lEmployee
-ORDER BY ID desc
+ORDER BY 1 desc
+
+SELECT *
+FROM lEmployeeStartFinish
+ORDER BY lEmployee_ID DESC
 ----------------------------------------------------------------------------------------------------------------------------
 /*****************************       CREATE NEW EMPLOYEE  *****************************************************************/
 ----------------------------------------------------------------------------------------------------------------------------
 
 --Highlight value and right click Change all occurences, then enter new value (Only works in Data Studio)
-DECLARE @FirstName nvarchar(20) = 'EnterFirstName'
-DECLARE @Surname nvarchar(20) = 'EnterSurname'
+DECLARE @FirstName nvarchar(20) = 'Carl'
+DECLARE @Surname nvarchar(20) = 'Black'
 DECLARE @ShortName nvarchar(20) = @Surname + ' '+ LEFT(@FirstName,1)
-DECLARE @EmployeeUsername nvarchar(100) = 'EnterUsername'
+DECLARE @EmployeeUsername nvarchar(100) = 'Carl'
 DECLARE @EmployeePassword nvarchar(48) = 'cvesjf474kmEoNbPg2CTkw==' ---Default is ngen
-DECLARE @EmployeeNo nvarchar(20) = 'EnterEmployeeNo'
-DECLARE @RARole nvarchar(50) = 'EnterAdminRole'
+DECLARE @EmployeeNo nvarchar(20) = 'Carl'
+DECLARE @RARole nvarchar(50) = 'ADMINISTRATOR/RUSADA'
 
 IF NOT EXISTS(SELECT TOP 1 ID FROM lEmployee where EmployeeUsername = @EmployeeUsername)
 BEGIN
@@ -47,6 +51,7 @@ VALUES
 	@EmployeeUsername,
 	@EmployeePassword
 )
+
 END
 
 
@@ -55,8 +60,9 @@ GO
 ----------------------------------------------------------------------------------------------------------------------------
 /*****************************       ASSIGN ROLE TO EMPLOYEE  *************************************************************/
 ----------------------------------------------------------------------------------------------------------------------------
-DECLARE @EmployeeUsername nvarchar(100) = 'EnterUsername'
-DECLARE @RARole nvarchar(50) = 'EnterAdminRole'
+
+DECLARE @EmployeeUsername nvarchar(100) = 'Carl'
+DECLARE @RARole nvarchar(50) = 'ADMINISTRATOR/RUSADA'
 DECLARE @roleId INT = 0;
 SET @roleId = (SELECT TOP 1 ID FROM uRole where Code = @RARole)
 
@@ -66,14 +72,56 @@ SET @EmployeeID = (SELECT TOP 1 ID FROM lEmployee where EmployeeUsername = @Empl
 INSERT INTO lEmployeeRole(lEmployee_ID, uRole_ID, IsDefault)
 VALUES(@EmployeeID, @roleId, 1)
 
+
+GO
+
+----------------------------------------------------------------------------------------------------------------------------
+/*****************************       ADD EMPLOYEE PERIOD DATE  *************************************************************/
+----------------------------------------------------------------------------------------------------------------------------
+DECLARE @EmployeeUsername nvarchar(100) = 'Carl'
+DECLARE @EmployeeID INT = 0;
+SET @EmployeeID = (SELECT TOP 1 ID FROM lEmployee where EmployeeUsername = @EmployeeUsername)
+
+IF NOT EXISTS(SELECT TOP 1 ID FROM lEmployeeStartFinish where lEmployee_ID = @EmployeeID)
+BEGIN
+
+
+INSERT [dbo].[lEmployeeStartFinish](
+[lEmployee_ID], 
+[StartDate],
+[FinishDate],
+[GUID],
+[uRALUser_ID],
+[uRALUser_IDCreated],
+[RecordTimeStampCreated],
+[RecordLocked],
+[Closed],
+[ReadOnly],
+[RecordTimeStamp])
+
+VALUES( 
+@EmployeeID,
+'2019-06-01 00:00:00',
+'1900-01-01 00:00:00',
+NEWID(),
+1,
+1,
+GETDATE(),
+0,
+0,
+0,
+GETDATE())
+
+END
+
 GO
 
 ----------------------------------------------------------------------------------------------------------------------------
 /*****************************       CREATE USER TO EMPLOYEE  *************************************************************/
 ----------------------------------------------------------------------------------------------------------------------------
-DECLARE @FirstName nvarchar(20) = 'EnterFirstName'
-DECLARE @Surname nvarchar(20) = 'EnterSurname'
-DECLARE @EmployeeUsername nvarchar(100) = 'EnterUsername'
+DECLARE @FirstName nvarchar(20) = 'Carl'
+DECLARE @Surname nvarchar(20) = 'Black'
+DECLARE @EmployeeUsername nvarchar(100) = 'Carl'
 DECLARE @EmployeePassword nvarchar(48) = 'cvesjf474kmEoNbPg2CTkw=='
 DECLARE @EmployeeID INT = 0;
 SET @EmployeeID = (SELECT TOP 1 ID FROM lEmployee where EmployeeUsername = @EmployeeUsername)
@@ -110,7 +158,7 @@ GO
 ----------------------------------------------------------------------------------------------------------------------------
 /*****************************       SET DEFAULT ROLE       *****************************************************************/
 ----------------------------------------------------------------------------------------------------------------------------
-DECLARE @RARole nvarchar(50) = 'EnterAdminRole'
+DECLARE @RARole nvarchar(50) = 'ADMINISTRATOR/RUSADA'
 DECLARE @roleID INT = 0
 SET @roleID = (SELECT TOP 1 ID FROM uRole where Code = @RARole)
 
@@ -159,8 +207,13 @@ INSERT INTO uRoleComponent(uRole_ID,wWorkFlow_ID,wComponent_ID,CanRead,CanWrite)
 INSERT INTO uRoleComponent(uRole_ID,wWorkFlow_ID,wComponent_ID,CanRead,CanWrite) VALUES (@roleID, @editRoleWorkFlow, @ROLEEMPLOYEEUSERRIGHT, 1, 1)
 INSERT INTO uRoleComponent(uRole_ID,wWorkFlow_ID,wComponent_ID,CanRead,CanWrite) VALUES (@roleID, @editRoleWorkFlow, @ROLEUSERRIGHTCONTEXT, 1, 1)
 
-SELECT *
+SELECT ID,*
 FROM lEmployee
-ORDER BY ID desc
+ORDER BY 1 desc
+
+
+SELECT *
+FROM lEmployeeStartFinish
+ORDER BY lEmployee_ID DESC
 
 ROLLBACK
