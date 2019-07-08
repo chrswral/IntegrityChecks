@@ -7,6 +7,10 @@ NOT SET UP TO RUN EVERYTHING AT ONCE, YET */
 ---Update aCompany-----
 SELECT * FROM aCompany
 
+UPDATE uRALMenu
+SET NodeText = REPLACE(NodeText, '&', '&&')
+WHERE NodeText LIKE '%&%'
+
 
   BEGIN TRAN 
   UPDATE aCompany
@@ -20,7 +24,7 @@ SELECT * FROM aCompany
   SELECT EmployeeNo,Surname,ShortDisplayName,Email,*
   FROM lEmployee
 
-  -----Update lEmployee---------
+  -----Update lEmployee---------  /* Why seperate queries!? */
    BEGIN TRAN 
 
   UPDATE lEmployee
@@ -29,8 +33,17 @@ SELECT * FROM aCompany
   UPDATE lEmployee
   SET Surname = SUBSTRING(Surname, 1,1)
 
+   UPDATE uRALUser
+  SET Surname = FirstName+'son'
+  WHERE Surname > ''
+  AND uRALUser.ID <> 1
+
   UPDATE uRALUser
-  SET Surname = SUBSTRING(Surname, 1,1)
+  SET Surname = LTRIM(SUBSTRING(Surname, PATINDEX( '% %', Surname), 99))
+  WHERE PATINDEX( '% %', Surname) > 0
+  AND Surname > ''
+  AND uRALUser.ID <> 1
+
 
 
   UPDATE uRALUser
@@ -40,9 +53,15 @@ SELECT * FROM aCompany
   UPDATE lEmployee
   SET EmployeeRemarks =''
 
-
   Update lEmployee
   SET Mobile =  FORMAT(ID, '07 555 000')
+
+  UPDATE lEmployee
+  SET Surname = FirstName+'son'
+
+  UPDATE lEmployee
+  SET Surname = SUBSTRING(Surname, PATINDEX( '% %', Surname), 99)
+  WHERE PATINDEX( '% %', Surname) > 0
 
   UPDATE lEmployee 
   SET Tel= ''
@@ -215,3 +234,117 @@ FROM uRALRight WHERE ID IN ( 1856, 1855, 1857, 2740, 2739)
 SELECT * FROM uRALRight WHERE ID IN ( 1856, 1855, 1857, 2740, 2739)
 
 ROLLBACK
+
+BEGIN TRAN
+
+UPDATE aAccount
+SET Name = aAccountType.AccountType+' '+CAST(aAccount.ID AS Varchar(10))
+, WebSite = ''
+, TaxNumber = ''
+FROM aAccount
+JOIN aAccountType ON aAccount.aAccountType_ID = aAccountType.ID
+WHERE (Supplier = 1 OR Customer = 1)
+AND Account NOT LIKE 'N%'
+
+UPDATE aAccount
+SET ShortName = aAccountType.AccountType+' '+CAST(aAccount.ID AS Varchar(10))
+FROM aAccount
+JOIN aAccountType ON aAccount.aAccountType_ID = aAccountType.ID
+WHERE (Supplier = 1 OR Customer = 1)
+AND Account NOT LIKE 'N%'
+AND ShortName > ''
+
+
+SELECT aAccount.ID, AccountType, Name, * 
+FROM aAccount
+JOIN aAccountType ON aAccount.aAccountType_ID = aAccountType.ID
+WHERE (Supplier = 1 OR Customer = 1)
+AND Account NOT LIKE 'N%'
+
+ROLLBACK TRAN
+
+BEGIN TRAN
+
+UPDATE aAccount
+SET Name = 'Nominal '+CAST(aAccount.ID AS Varchar(10))
+, ShortName = 'Nom'+CAST(aAccount.ID AS Varchar(10))
+FROM aAccount
+JOIN aAccountType ON aAccount.aAccountType_ID = aAccountType.ID
+WHERE (Nominal = 1)
+AND Account NOT LIKE 'N%'
+
+
+SELECT aAccount.ID, AccountType, Name, ShortName,* 
+FROM aAccount
+JOIN aAccountType ON aAccount.aAccountType_ID = aAccountType.ID
+WHERE (Nominal = 1)
+AND Account NOT LIKE 'N%'
+
+ROLLBACK TRAN
+
+
+BEGIN TRAN
+
+UPDATE aAddress
+SET aAddress.Name = aAccount.Name
+, Address1 = IIF(Address1 > '', 'Address Line 1', '')
+, Address2 = IIF(Address2 > '', 'Address Line 2', '')
+, Address3 = IIF(Address3 > '', 'Address Line 3', '')
+, City =  ''
+, Telephone = ''
+, Fax = ''
+, EMail = ''
+, PostCode = ''
+FROM aAddress
+JOIN aAccount ON aAddress.aAccount_ID = aAccount.ID
+
+SELECT * FROM aAddress
+
+ROLLBACK
+
+
+/* MI Issuers and Types */
+
+BEGIN TRAN
+
+UPDATE tMIIssuer
+SET Issuer = 'Rusada'
+WHERE Issuer = 'Sun-Air'
+
+SELECT *
+FROM tMIIssuer
+
+SELECT *
+FROM tMIType
+
+ROLLBACK
+
+/* Delete unused order statuses */
+BEGIN TRAN
+
+SELECT t.name, c.name
+FROM sys.tables t
+JOIn sys.columns c ON c.object_id = t.object_id
+WHERE c.name LIKE '%sOrderStatus_ID%'
+
+DELETE FROM sOrderStatus
+WHERE ID NOT IN (SELECT sOrderStatus_ID FROM sOrderNote )
+AND ID NOT IN (SELECT sOrderStatus_ID FROM sComponentOrder )
+AND ID NOT IN (SELECT sOrderStatus_ID FROM sOrderLog )
+AND ID NOT IN (SELECT sOrderStatus_ID FROM sOrderHistory )
+AND ID NOT IN (SELECT sOrderStatus_ID FROM sOrderStatusHistory )
+AND ID NOT IN (SELECT sOrderStatus_ID FROM sOrder )
+AND ID NOT IN (SELECT sOrderStatus_ID FROM sWorkOrderWorkFlow )
+AND ID NOT IN (SELECT sOrderStatus_ID FROM sWorkOrderWorkFlow )
+AND ID NOT IN (SELECT sOrderStatus_ID FROM sVendorOrderNote )
+AND ID NOT IN (SELECT sOrderStatus_ID FROM sComponentWorkOrderWorkFlow )
+AND ID NOT IN (SELECT sOrderStatus_ID FROM sComponentWorkOrderWorkFlow )
+
+UPDATE sOrderStatus
+SET OrderStatus = 'Closed'
+WHERE ID = 5
+
+ROLLBACK
+
+
+UPDATE sOrderTaskType SET Colour = -1

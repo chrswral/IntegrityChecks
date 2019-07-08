@@ -9,6 +9,8 @@ AS
 
 SET XACT_ABORT ON 
 
+SET NOCOUNT ON
+
 /* Create Pending Table */
 DECLARE @AuditHistoryPending TABLE (
     BaseTableID INT NOT NULL,
@@ -26,6 +28,8 @@ FROM sStock
 LEFT JOIN sOrderPartReceipt ON sStock.sOrderPartReceipt_ID = sOrderPartReceipt.ID
 WHERE sOrderPartReceipt.ID IS NULL
 
+PRINT 'Deleted: Missing Receipt: ' + CAST(@@ROWCOUNT AS varchar(10))+' rows affected'
+
 /*Remove orphaned links to missing Stock Ownership */
 UPDATE sStock
 SET sStockOwnership_ID = sOrderPartReceipt.sStockOwnership_ID
@@ -34,6 +38,8 @@ INTO @AuditHistoryPending
 FROM sStock 
 JOIN sOrderPartReceipt ON sOrderPartReceipt.ID = sStock.sOrderPartReceipt_ID
 WHERE sStock.sStockOwnership_ID = 0
+
+PRINT 'Missing Stock Ownership: ' + CAST(@@ROWCOUNT AS varchar(10))+' rows affected'
 
 /* Fix missing stock locations */
 UPDATE sStock
@@ -47,6 +53,8 @@ FROM sStock
 LEFT JOIN sBaseWarehouseLocation ON sStock.sBaseWarehouseLocation_ID = sBaseWarehouseLocation.ID 
 WHERE sBaseWarehouseLocation.ID IS NULL
 
+PRINT 'Missing Location: ' + CAST(@@ROWCOUNT AS varchar(10))+' rows affected'
+
 
 /*Remove FK to completed sDemandPart */
 UPDATE sStock
@@ -58,6 +66,8 @@ JOIN sDemandPart ON sStock.sDemandPart_ID = sDemandPart.ID
 JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandPart.sDemandItemStatus_ID
 JOIN sPartTransactionType ON sPartTransactionType.ID = sPartTransactionType_ID
 WHERE sDemandItemStatus.Completed = 1 AND sPartTransactionType.Replenishment = 1
+
+PRINT 'Remove FK to completed sDemandPart: ' + CAST(@@ROWCOUNT AS varchar(10))+' rows affected'
 
 /*Remove FK to Issued sDemandPart */
 UPDATE sStock
@@ -71,6 +81,8 @@ JOIN sPart on sPart_IDDemanded = sPart.ID
 JOIN sPartClassification on sPartClassification.ID = sPart.sPartClassification_ID
 WHERE sDemandItemStatus.Issued = 1 and sPartClassification.Tool <> 1
 
+PRINT 'Remove FK to Issued sDemandPart: ' + CAST(@@ROWCOUNT AS varchar(10))+' rows affected'
+
 /*Remove FK to planned sDemandPart */
 UPDATE sStock
 SET sDemandPart_ID = 0
@@ -82,6 +94,8 @@ JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandPart.sDemandItemStatus_I
 JOIN sPartTransactionType ON sPartTransactionType.ID = sPartTransactionType_ID
 WHERE sDemandItemStatus.Planned = 1 
 
+PRINT 'Remove FK to planned sDemandPart: ' + CAST(@@ROWCOUNT AS varchar(10))+' rows affected'
+
 /*Remove FK to Cancelled sDemandPart */
 UPDATE sStock
 SET sDemandPart_ID = 0
@@ -92,6 +106,8 @@ JOIN sDemandPart ON sStock.sDemandPart_ID = sDemandPart.ID
 JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandPart.sDemandItemStatus_ID
 WHERE sDemandItemStatus.Cancelled = 1 
 
+PRINT 'Remove FK to cancelled sDemandPart: ' + CAST(@@ROWCOUNT AS varchar(10))+' rows affected'
+
 /*Remove orphaned links to missing sDemandPart */
 UPDATE sStock
 SET sDemandPart_ID = 0
@@ -101,6 +117,8 @@ FROM sStock
 LEFT JOIN sDemandPart ON sStock.sDemandPart_ID = sDemandPart.ID
 WHERE sDemandPart.ID IS NULL AND sStock.sDemandPart_ID > 0
 
+PRINT 'Remove orphaned links to missing sDemandPart: ' + CAST(@@ROWCOUNT AS varchar(10))+' rows affected'
+
 /* Fix Menu &s */
 UPDATE uRALMenu
 SET NodeText = REPLACE(NodeText, ' & ', ' && ')
@@ -108,6 +126,8 @@ OUTPUT deleted.ID,'Fixed Menu &s ','uRALMenu'
 INTO @AuditHistoryPending   
 FROM uRALMenu
 WHERE NodeText LIKE '% & %'
+
+PRINT 'Fixed Menu: ' + CAST(@@ROWCOUNT AS varchar(10))+' rows affected'
 
 /* Fix Cancelled Demands with WIP or COS transaction (Zero Value Only) */
 UPDATE sDemandPart
@@ -119,7 +139,9 @@ JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandItemStatus_ID
 WHERE(sDemandItemStatus.Issued = 0
       AND sDemandItemStatus.Credit = 0)
      AND (aTransaction_IDWIP + aTransaction_IDCOS > 0)
-     AND (AmountBaseWIP + AmountBaseCOS = 0);
+     AND (AmountBaseWIP + AmountBaseCOS = 0)
+
+PRINT 'Cancelled Demands with WIP or COS: ' + CAST(@@ROWCOUNT AS varchar(10))+' rows affected'
 
 
 /* Remove duplicate barcodes*/
@@ -134,6 +156,7 @@ JOIN (SELECT MIN(ID) ID, BarCode
     HAVING COUNT(*) >1) bc ON bc.BarCode = sStock.BarCode
 WHERE bc.ID <> sStock.ID
 
+PRINT 'Duplicate Barcodes: ' + CAST(@@ROWCOUNT AS varchar(10))+' rows affected'
 
 /* Fix missing barcodes*/
 
@@ -157,17 +180,19 @@ WHERE bc.ID <> sStock.ID
 	   SELECT sStock.ID, RIGHT(REPLICATE('0',@BarcodeDigits) + CAST(@LastBarcode+ROW_NUMBER() OVER (ORDER BY sStock.ID) AS varchar(10)),@BarcodeDigits) AS BarCode
 	   FROM sStock
 	   WHERE BarCode = '') ds ON ds.ID = sStock.ID 
-    
-    /* Update last barcode and unlock*/
-    UPDATE sStockConfig
-    SET ConfigValue = (SELECT MAX(BarCode) FROM @Updated), RecordLocked = 0
-    FROM sStockConfig
-    WHERE ConfigName = 'LastBarcode'
+
+		/* Update last barcode and unlock*/
+		UPDATE sStockConfig
+		SET ConfigValue = ISNULL((SELECT MAX(BarCode) FROM @Updated), ConfigValue), RecordLocked = 0
+		FROM sStockConfig
+		WHERE ConfigName = 'LastBarcode'
 
     /*Insert into Audit Table */
     INSERT INTO @AuditHistoryPending
     SELECT ID, 'Missing Barcodes', 'sStock'
     FROM @Updated
+
+	PRINT 'Missing Barcodes: ' + CAST(@@ROWCOUNT AS varchar(10))+' rows affected'
 
 
 INSERT INTO sup.AuditHistory(BaseTable,BaseTableID,Fix)
@@ -187,7 +212,9 @@ BEGIN
     ROLLBACK TRANSACTION SIFixes
 
 END
-GO;
+GO
+
+
 
 DECLARE @HelpText VARCHAR(100)= N'Integrity Fixes Created '+CAST(GETDATE() AS VARCHAR(30));
 EXEC sys.sp_addextendedproperty
