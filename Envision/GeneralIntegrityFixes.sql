@@ -137,7 +137,8 @@ INTO @AuditHistoryPending
 FROM sDemandPart
 JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandItemStatus_ID
 WHERE(sDemandItemStatus.Issued = 0
-      AND sDemandItemStatus.Credit = 0)
+     AND sDemandItemStatus.Credit = 0
+     AND sDemandItemStatus.Transferred = 0)
      AND (aTransaction_IDWIP + aTransaction_IDCOS > 0)
      AND (AmountBaseWIP + AmountBaseCOS = 0)
 

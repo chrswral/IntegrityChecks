@@ -148,11 +148,10 @@ UNION
 SELECT '3',
        'Cancelled Demands with WIP or COS',
        ISNULL(COUNT(sDemandPart.ID), 0),
-       'SELECT sDemandPart.Qty, sDemandItemStatus.Status, sPartTransactionType.TransactionType, AmountBaseWIP, aTransaction_IDWIP, AmountBaseCOS, aTransaction_IDCOS FROM sDemandPart JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandItemStatus_ID JOIN sPartTransactionType ON sPartTransactionType.ID = sPartTransactionType_ID WHERE (sDemandItemStatus.Issued = 0 AND sDemandItemStatus.Credit = 0) AND (aTransaction_IDWIP + aTransaction_IDCOS > 0) AND (AmountBaseWIP + AmountBaseCOS > 0)'
+       'SELECT sDemandPart.Qty, sDemandItemStatus.Status, sPartTransactionType.TransactionType, AmountBaseWIP, aTransaction_IDWIP, AmountBaseCOS, aTransaction_IDCOS FROM sDemandPart JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandItemStatus_ID JOIN sPartTransactionType ON sPartTransactionType.ID = sPartTransactionType_ID WHERE (sDemandItemStatus.Issued = 0 AND sDemandItemStatus.Credit = 0  AND sDemandItemStatus.Transferred = 0) AND (aTransaction_IDWIP + aTransaction_IDCOS > 0) AND (AmountBaseWIP + AmountBaseCOS > 0)'
 FROM sDemandPart
 JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandItemStatus_ID
-WHERE(sDemandItemStatus.Issued = 0
-      AND sDemandItemStatus.Credit = 0)
+WHERE(sDemandItemStatus.Issued = 0 AND sDemandItemStatus.Credit = 0 AND sDemandItemStatus.Transferred = 0)
      AND (aTransaction_IDWIP + aTransaction_IDCOS > 0)
 
 UNION
@@ -768,19 +767,19 @@ AS
                sStockLog.RecordTimeStampCreated AS RecordTimeStamp,
                sStockLog.uRALUser_IDCreated,
                'sStockLog' AS [Table],
-               sDemandLog.ID AS DemandID,
-               sDemandPartLog.ID AS DemandPartID,
-               sDemandLog.DemandNo AS Demand,
-               sDemandPartLog.DemandItem+'/'+sDemandPartLog.DemandItemSequence AS ItemSequence,
+               sDemand.ID AS DemandID,
+               sDemandPart.ID AS DemandPartID,
+               sDemand.DemandNo AS Demand,
+               sDemandPart.DemandItem+'/'+sDemandPart.DemandItemSequence AS ItemSequence,
                sStockLog.Qty,
                'Stock BaseTableID: '+CAST(sStockLog.BaseTableID AS VARCHAR)+ISNULL(CASE WHEN sStockLog.sDemandPart_ID > 0
-                                                                                       THEN ' - DemandPart: '+sDemandLog.DemandNo+'\'+sDemandPartLog.DemandItem+'\'+sDemandPartLog.DemandItemSequence
+                                                                                       THEN ' - DemandPart: '+sDemand.DemandNo+'\'+sDemandPart.DemandItem+'\'+sDemandPart.DemandItemSequence
                                                                                        ELSE ''
                                                                                    END, '') AS [Action],
                sStockLog.ID
         FROM sStockLog
-        LEFT OUTER JOIN sDemandPartLog ON sStockLog.sDemandPart_ID = sDemandPartLog.ID
-        LEFT OUTER JOIN sDemandLog ON sDemandPartLog.sDemand_ID = sDemandLog.ID
+        LEFT OUTER JOIN sDemandPart ON sStockLog.sDemandPart_ID = sDemandPart.ID
+        LEFT OUTER JOIN sDemand ON sDemandPart.sDemand_ID = sDemand.ID
         WHERE sStockLog.sOrderPartReceipt_ID = @sOrderPartReceiptID
         UNION
         SELECT sOrderPartReceiptLog.Version,
