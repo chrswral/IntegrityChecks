@@ -462,6 +462,88 @@ LEFT JOIN sDemandPart ON sStock.sDemandPart_ID = sDemandPart.ID
 LEFT JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandItemStatus_ID
 WHERE tToolStatus.ID IN (SELECT ID FROM tToolStatus WHERE InStock = 1) AND sDemandItemStatus.ID IN (SELECT ID FROM sDemandItemStatus WHERE Completed = 1)
 
+UNION
+
+SELECT '2'
+       , 'Duplicate tAssetHistoryLifeCode Records'
+       , ISNULL(COUNT(*),0) 
+       ,'SELECT 
+       tAsset.SerialNo, 
+       tAsset.AssetNo,
+          tAssetHistoryLifeCode.LifeCode,
+          tMI.MI, 
+       tMI.Title
+FROM
+(
+    SELECT tAssetHistoryLifeCode.ID tAssetHistoryLifeCode_ID, 
+           tAssetMIMSLocation_ID, 
+           COUNT(tAssetHistoryLifeCode.ID) OVER(PARTITION BY tAssetMIMSLocation_ID, 
+                                                             tLogBook_ID, 
+                                                             tLifeCode_ID) AHLCCount
+    FROM tAssetHistoryLifeCode
+         JOIN tAssetMIMSLocation ON tAssetHistoryLifeCode.tAssetMIMSLocation_ID = tAssetMIMSLocation.ID
+                                    AND tAssetMIMSLocation.ActiveRecord = 1
+         JOIN tAsset ON tAssetMIMSLocation.tAsset_ID = tAsset.ID
+         JOIN tAssetTree
+         JOIN tReg ON tAssetTree.tAsset_IDTop = tReg.tAsset_ID
+         JOIN tRegStatus ON tReg.tRegStatus_ID = tRegStatus.ID
+                            AND tRegStatus.Active = 1 ON tAssetTree.tAsset_ID = tAsset.ID
+         LEFT JOIN tMIMSLocation
+         JOIN tMIMS ON tMIMSLocation.tMIMS_ID = tMIMS.ID ON tAssetMIMSLocation.tMIMSLocation_ID = tMIMSLocation.ID
+    WHERE tMIMSLocation.ID IS NULL
+          OR (tAssetHistoryLifeCode.Sampling = tReg.Sampling)
+) qry
+JOIN tAssetMIMSLocation
+JOIN tAsset ON tAssetMIMSLocation.tAsset_ID = tAsset.ID
+LEFT JOIN tMIMSLocation
+JOIN tMIMS ON tMIMSLocation.tMIMS_ID = tMIMS.ID
+JOIN tMI ON tMIMS.tMI_ID = tMI.ID ON tAssetMIMSLocation.tMIMSLocation_ID = tMIMSLocation.ID ON qry.tAssetMIMSLocation_ID = tAssetMIMSLocation.ID
+JOIN tAssetHistoryLifeCode ON tAssetHistoryLifeCode.ID = qry.tAssetHistoryLifeCode_ID
+WHERE AHLCCount > 1
+GROUP BY        tMI.MI, 
+       tMI.Title, 
+       tAsset.SerialNo, 
+       tAsset.AssetNo,        tAssetHistoryLifeCode.LifeCode
+ORDER BY SerialNo, LifeCode'
+FROM
+(SELECT 
+       tAsset.SerialNo, 
+       tAsset.AssetNo,
+          tAssetHistoryLifeCode.LifeCode,
+          tMI.MI, 
+       tMI.Title
+FROM
+(
+    SELECT tAssetHistoryLifeCode.ID tAssetHistoryLifeCode_ID, 
+           tAssetMIMSLocation_ID, 
+           COUNT(tAssetHistoryLifeCode.ID) OVER(PARTITION BY tAssetMIMSLocation_ID, 
+                                                             tLogBook_ID, 
+                                                             tLifeCode_ID) AHLCCount
+    FROM tAssetHistoryLifeCode
+         JOIN tAssetMIMSLocation ON tAssetHistoryLifeCode.tAssetMIMSLocation_ID = tAssetMIMSLocation.ID
+                                    AND tAssetMIMSLocation.ActiveRecord = 1
+         JOIN tAsset ON tAssetMIMSLocation.tAsset_ID = tAsset.ID
+         JOIN tAssetTree
+         JOIN tReg ON tAssetTree.tAsset_IDTop = tReg.tAsset_ID
+         JOIN tRegStatus ON tReg.tRegStatus_ID = tRegStatus.ID
+                            AND tRegStatus.Active = 1 ON tAssetTree.tAsset_ID = tAsset.ID
+         LEFT JOIN tMIMSLocation
+         JOIN tMIMS ON tMIMSLocation.tMIMS_ID = tMIMS.ID ON tAssetMIMSLocation.tMIMSLocation_ID = tMIMSLocation.ID
+    WHERE tMIMSLocation.ID IS NULL
+          OR (tAssetHistoryLifeCode.Sampling = tReg.Sampling)
+) qry
+JOIN tAssetMIMSLocation
+JOIN tAsset ON tAssetMIMSLocation.tAsset_ID = tAsset.ID
+LEFT JOIN tMIMSLocation
+JOIN tMIMS ON tMIMSLocation.tMIMS_ID = tMIMS.ID
+JOIN tMI ON tMIMS.tMI_ID = tMI.ID ON tAssetMIMSLocation.tMIMSLocation_ID = tMIMSLocation.ID ON qry.tAssetMIMSLocation_ID = tAssetMIMSLocation.ID
+JOIN tAssetHistoryLifeCode ON tAssetHistoryLifeCode.ID = qry.tAssetHistoryLifeCode_ID
+WHERE AHLCCount > 1
+GROUP BY        tMI.MI, 
+       tMI.Title, 
+       tAsset.SerialNo, 
+       tAsset.AssetNo,        tAssetHistoryLifeCode.LifeCode
+)ds
 
 
 UNION
