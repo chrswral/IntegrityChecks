@@ -551,7 +551,7 @@ UNION
 SELECT '2'
         , 'Stock Integrity Errors'
         , ISNULL(COUNT(T.sOrderPartReceipt_ID),0) 
-        , 'SELECT * FROM sup.StockIntegrityErrors'
+        , 'SELECT * FROM sup.StockIntegrityCheck'
 FROM
 (SELECT sOrderPartReceipt.ID AS sOrderPartReceipt_ID,
        sOrderPartReceipt.Qty AS ReceiptQty,
