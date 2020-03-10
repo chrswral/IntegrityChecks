@@ -1399,7 +1399,11 @@ LEFT JOIN sys.partitions ON partitions.hobt_id = dm_tran_locks.resource_associat
 LEFT JOIN sys.indexes ON indexes.object_id = partitions.object_id AND indexes.index_id = partitions.index_id
 WHERE resource_associated_entity_id > 0
   AND resource_database_id = DB_ID()
-
+  AND CASE
+           WHEN resource_type = 'OBJECT'
+               THEN OBJECT_NAME(dm_tran_locks.resource_associated_entity_id)
+           ELSE OBJECT_NAME(partitions.object_id)
+       END NOT LIKE 'DF%'
 GO
 
 EXEC sys.sp_addextendedproperty
