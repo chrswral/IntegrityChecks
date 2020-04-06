@@ -32,6 +32,92 @@ SELECT TOP 1000 *
 FROM
 (
 
+
+SELECT '1' AS Priority, 
+       'Incorrect TSN Values',
+       ISNULL(COUNT(ds.ID), 0) AS ErrorCount, 
+       'SELECT tAssetMIMSLocation.ID, tAssetMIMSLocation.RecordTimeStampCreated, tAsset.SerialNo, tAsset.AssetNo,tRegJourneyLogBookLifeCodeEvents.LifeTotal, tAssetHistoryLifeCode.*
+                            FROM tAssetMIMSLocation
+                            LEFT JOIN tAssetHistoryLifeCode ON tAssetHistoryLifeCode.tAssetMIMSLocation_ID = tAssetMIMSLocation.ID
+                            JOIN sOrderTask ON tAssetMIMSLocation.sOrderTask_ID = sOrderTask.ID
+                            JOIN sOrderTaskRegJourneyLogBook ON sOrderTaskRegJourneyLogBook.sOrderTask_ID = sOrderTask.ID
+                            JOIN tRegJourneyLogBook ON sOrderTaskRegJourneyLogBook.tRegJourneyLogBook_ID = tRegJourneyLogBook.ID AND tRegJourneyLogBook.tLogBook_ID = tAssetHistoryLifeCode.tLogBook_ID
+                            JOIN tRegJourneyLogBookLifeCodeEvents ON tRegJourneyLogBookLifeCodeEvents.tRegJourneyLogBook_ID = tRegJourneyLogBook.ID AND tRegJourneyLogBookLifeCodeEvents.tLifeCode_ID = tAssetHistoryLifeCode.tLifeCode_ID
+                            JOIN tAssetTree ON tAssetMIMSLocation.tAsset_ID = tAssetTree.tAsset_ID
+                            JOIN tReg ON tReg.tAsset_ID = tAssetTree.tAsset_IDTop
+                            JOIN tRegStatus ON tReg.tRegStatus_ID = tRegStatus.ID AND tRegStatus.Active = 1
+                            JOIN tAsset ON tAssetMIMSLocation.tAsset_ID = tAsset.ID
+                            WHERE
+                            tMIMSLocation_ID = 0 aND ActiveRecord = 1 
+                            AND tRegJourneyLogBookLifeCodeEvents.LifeTotal <> tAssetHistoryLifeCode.FitLifeCodeTotal 
+                            AND (
+                                   tAssetHistoryLifeCode.RecordTimeStampCreated > GETUTCDATE() -7 
+                                   OR tAssetHistoryLifeCode.RecordTimeStamp > GETUTCDATE() -7)
+                                          
+                            UNION
+
+                            SELECT tAssetMIMSLocation.ID, tAssetMIMSLocation.RecordTimeStampCreated, tAsset.SerialNo, tAsset.AssetNo,tRegJourneyLogBookLifeCodeEvents.LifeTotal, tAssetHistoryLifeCode.*
+                            FROM tAssetMIMSLocation
+                            LEFT JOIN tAssetHistoryLifeCode ON tAssetHistoryLifeCode.tAssetMIMSLocation_ID = tAssetMIMSLocation.ID
+                            JOIN sOrderTask ON tAssetMIMSLocation.sOrderTask_ID = sOrderTask.ID
+                            JOIN sOrderTaskRegJourneyLogBook ON sOrderTaskRegJourneyLogBook.sOrderTask_ID = sOrderTask.ID
+                            JOIN tRegJourneyLogBook ON sOrderTaskRegJourneyLogBook.tRegJourneyLogBook_ID = tRegJourneyLogBook.ID AND tRegJourneyLogBook.tLogBook_ID = tAssetHistoryLifeCode.tLogBook_ID
+                            JOIN tRegJourneyLogBookLifeCodeEvents ON tRegJourneyLogBookLifeCodeEvents.tRegJourneyLogBook_ID = tRegJourneyLogBook.ID AND tRegJourneyLogBookLifeCodeEvents.tLifeCode_ID = tAssetHistoryLifeCode.tLifeCode_ID
+                            JOIN tAssetTree ON tAssetMIMSLocation.tAsset_ID = tAssetTree.tAsset_ID
+                            JOIN tReg ON tReg.tAsset_ID = tAssetTree.tAsset_IDTop
+                            JOIN tRegStatus ON tReg.tRegStatus_ID = tRegStatus.ID AND tRegStatus.Active = 1
+                            JOIN tAsset ON tAssetMIMSLocation.tAsset_ID = tAsset.ID
+                            WHERE
+                            tMIMSLocation_ID = 0 aND ActiveRecord = 1 
+                            AND tRegJourneyLogBookLifeCodeEvents.LifeTotal <> tAssetHistoryLifeCode.FitLifeCodeTotal 
+                            AND (tAssetMIMSLocation.RecordTimeStampCreated > GETUTCDATE() -7 
+                                   OR tAssetMIMSLocation.RecordTimeStamp > GETUTCDATE() -7 )   
+                                   
+                            ORDER BY tAssetHistoryLifeCode.RecordTimeStamp DESC' AS Query
+FROM
+(
+    SELECT tAssetMIMSLocation.ID
+    FROM tAssetMIMSLocation
+         LEFT JOIN tAssetHistoryLifeCode ON tAssetHistoryLifeCode.tAssetMIMSLocation_ID = tAssetMIMSLocation.ID
+         JOIN sOrderTask ON tAssetMIMSLocation.sOrderTask_ID = sOrderTask.ID
+         JOIN sOrderTaskRegJourneyLogBook ON sOrderTaskRegJourneyLogBook.sOrderTask_ID = sOrderTask.ID
+         JOIN tRegJourneyLogBook ON sOrderTaskRegJourneyLogBook.tRegJourneyLogBook_ID = tRegJourneyLogBook.ID
+                                    AND tRegJourneyLogBook.tLogBook_ID = tAssetHistoryLifeCode.tLogBook_ID
+         JOIN tRegJourneyLogBookLifeCodeEvents ON tRegJourneyLogBookLifeCodeEvents.tRegJourneyLogBook_ID = tRegJourneyLogBook.ID
+                                                  AND tRegJourneyLogBookLifeCodeEvents.tLifeCode_ID = tAssetHistoryLifeCode.tLifeCode_ID
+         JOIN tAssetTree ON tAssetMIMSLocation.tAsset_ID = tAssetTree.tAsset_ID
+         JOIN tReg ON tReg.tAsset_ID = tAssetTree.tAsset_IDTop
+         JOIN tRegStatus ON tReg.tRegStatus_ID = tRegStatus.ID
+                            AND tRegStatus.Active = 1
+         JOIN tAsset ON tAssetMIMSLocation.tAsset_ID = tAsset.ID
+    WHERE tMIMSLocation_ID = 0
+          AND ActiveRecord = 1
+          AND tRegJourneyLogBookLifeCodeEvents.LifeTotal <> tAssetHistoryLifeCode.FitLifeCodeTotal
+          AND (tAssetHistoryLifeCode.RecordTimeStampCreated > GETUTCDATE() - 7
+               OR tAssetHistoryLifeCode.RecordTimeStamp > GETUTCDATE() - 7)
+    UNION ALL 
+    SELECT tAssetMIMSLocation.ID
+    FROM tAssetMIMSLocation
+         LEFT JOIN tAssetHistoryLifeCode ON tAssetHistoryLifeCode.tAssetMIMSLocation_ID = tAssetMIMSLocation.ID
+         JOIN sOrderTask ON tAssetMIMSLocation.sOrderTask_ID = sOrderTask.ID
+         JOIN sOrderTaskRegJourneyLogBook ON sOrderTaskRegJourneyLogBook.sOrderTask_ID = sOrderTask.ID
+         JOIN tRegJourneyLogBook ON sOrderTaskRegJourneyLogBook.tRegJourneyLogBook_ID = tRegJourneyLogBook.ID
+                                    AND tRegJourneyLogBook.tLogBook_ID = tAssetHistoryLifeCode.tLogBook_ID
+         JOIN tRegJourneyLogBookLifeCodeEvents ON tRegJourneyLogBookLifeCodeEvents.tRegJourneyLogBook_ID = tRegJourneyLogBook.ID
+                                                  AND tRegJourneyLogBookLifeCodeEvents.tLifeCode_ID = tAssetHistoryLifeCode.tLifeCode_ID
+         JOIN tAssetTree ON tAssetMIMSLocation.tAsset_ID = tAssetTree.tAsset_ID
+         JOIN tReg ON tReg.tAsset_ID = tAssetTree.tAsset_IDTop
+         JOIN tRegStatus ON tReg.tRegStatus_ID = tRegStatus.ID
+                            AND tRegStatus.Active = 1
+         JOIN tAsset ON tAssetMIMSLocation.tAsset_ID = tAsset.ID
+    WHERE tMIMSLocation_ID = 0
+          AND ActiveRecord = 1
+          AND tRegJourneyLogBookLifeCodeEvents.LifeTotal <> tAssetHistoryLifeCode.FitLifeCodeTotal
+          AND (tAssetMIMSLocation.RecordTimeStampCreated > GETUTCDATE() - 7
+               OR tAssetMIMSLocation.RecordTimeStamp > GETUTCDATE() - 7)
+) AS ds
+
+UNION
     
 SELECT '1' AS Priority,
        '*** CRITICAL *** MI life not tracking' AS Description,
