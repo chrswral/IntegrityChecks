@@ -34,7 +34,7 @@ FROM
 
 
 SELECT '1' AS Priority, 
-       'Incorrect TSN Values',
+       'Incorrect TSN Values' AS Description,
        ISNULL(COUNT(ds.ID), 0) AS ErrorCount, 
        'SELECT tAssetMIMSLocation.ID, tAssetMIMSLocation.RecordTimeStampCreated, tAsset.SerialNo, tAsset.AssetNo,tRegJourneyLogBookLifeCodeEvents.LifeTotal, tAssetHistoryLifeCode.*
                             FROM tAssetMIMSLocation
@@ -661,7 +661,7 @@ WHERE T.ReceiptQty <> T.StockQty + T.IssueQty
 
 
 
-)ds
+)AS ds
 WHERE ds.ErrorCount > 0
 ORDER BY Priority;
 
