@@ -32,6 +32,26 @@ SELECT TOP 1000 *
 FROM
 (
 
+SELECT '3' AS Priority,
+       'Duplicate Requisition Numbers' AS Description,
+       ISNULL(COUNT(ds.DemandNo), 0) AS ErrorCount,
+       'SELECT sOrderRange_ID, DemandNo, COUNT(DemandNo)
+              FROM sDemand
+              JOIN sOrderTask ON sOrderTask.ID = sOrderTask_ID
+              JOIN sOrder on sOrder.ID = sOrder_ID
+              GROUP BY DemandNo, sOrderRange_ID
+              HAVING COUNT(DemandNo) > 1
+              ORDER BY COUNT(DemandNo) DESC' AS Query
+FROM (
+SELECT sDemand.DemandNo
+FROM sDemand
+JOIN sOrderTask ON sOrderTask.ID = sOrderTask_ID
+JOIN sOrder on sOrder.ID = sOrder_ID
+GROUP BY DemandNo, sOrderRange_ID
+HAVING COUNT(DemandNo) > 1
+) AS ds
+
+UNION
 
 SELECT '1' AS Priority, 
        'Incorrect TSN Values' AS Description,
