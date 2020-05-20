@@ -35,13 +35,13 @@ FROM
 SELECT '3' AS Priority,
        'Duplicate Requisition Numbers' AS Description,
        ISNULL(COUNT(ds.DemandNo), 0) AS ErrorCount,
-       'SELECT sOrderRange_ID, DemandNo, COUNT(DemandNo)
+       'SELECT sOrderRange_ID, MAX(sOrder.OrderNo) OrderNo, DemandNo, COUNT(DemandNo)NumberOfDuplicates, MAX(sDemand.RecordTimeStampCreated)RecordTimeStampCreated, MAX(sDemand.uRALUser_IDCreated)uRALUser_IDCreated
               FROM sDemand
               JOIN sOrderTask ON sOrderTask.ID = sOrderTask_ID
               JOIN sOrder on sOrder.ID = sOrder_ID
-              GROUP BY DemandNo, sOrderRange_ID
-              HAVING COUNT(DemandNo) > 1
-              ORDER BY COUNT(DemandNo) DESC' AS Query
+			  GROUP BY DemandNo, sOrderRange_ID
+              HAVING COUNT(DemandNo) > 1 
+              ORDER BY MAX(sDemand.RecordTimeStampCreated) DESC,COUNT(DemandNo) DESC, DemandNo' AS Query
 FROM (
 SELECT sDemand.DemandNo
 FROM sDemand
