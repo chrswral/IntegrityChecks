@@ -1643,7 +1643,101 @@ AS
 
 
     END;
+GO;
+
+
+IF EXISTS
+(
+SELECT *
+FROM sys.procedures
+WHERE name = 'GetUserActions'
+)
+    DROP PROCEDURE [sup].[GetUserActions];
 GO
+
+CREATE PROCEDURE sup.GetUserActions
+(
+                 @From   nvarchar(26), 
+                 @To     nvarchar(226), 
+                 @User   int          = 1, 
+                 @Detail int          = 0
+)
+AS
+
+     SET NOCOUNT ON
+
+     CREATE TABLE #useractions
+     (
+                  [Action]        VARCHAR(10), 
+                  Tablename       NVARCHAR(100), 
+                  RecordTimeStamp SMALLDATETIME, 
+                  Version         BIGINT, 
+                  ID              INT
+     );
+     
+     DECLARE @TableName NVARCHAR(100);
+     DECLARE @ColumnName NVARCHAR(100);
+     DECLARE @sql NVARCHAR(600);
+
+     SET @From = CONCAT('''',@From,'''')
+     SET @To = CONCAT('''',@To,'''')
+     SET @User = CAST(@User AS varchar(10))
+     --SET @Summary = 1; -- If set to 1, then results only show edit / created per table per minute.
+
+     DECLARE tables CURSOR
+     FOR SELECT sysobjects.name AS TableName
+         FROM syscolumns
+         INNER JOIN sysobjects ON syscolumns.id = sysobjects.id
+         WHERE sysobjects.xtype = 'U'
+               AND syscolumns.name = 'uRALUser_ID';
+
+     OPEN tables;
+     FETCH NEXT FROM tables INTO @TableName;
+     WHILE @@FETCH_STATUS = 0
+     BEGIN
+         SELECT @sql = 'SELECT ''Created'' AS Action, ''' + @TableName + ''' AS TableName, RecordTimeStampCreated AS RecordTimeStamp, cast(Version as bigint), ID FROM ' + @TableName + ' WHERE RecordTimeStampCreated BETWEEN ' + @From + ' AND ' + @To + ' AND uRALUser_IDCreated = ' + CAST(@User AS nvarchar(10)) ;
+
+       --  PRINT @sql
+
+         INSERT INTO #useractions
+         EXEC sp_executesql @sql;
+
+         -- NOTE - If this is a main table record, e.g. sDemandPart, then any edits by other users later will exclude this from the results.
+
+         SELECT @sql = 'SELECT ''Edited'' AS Action, ''' + @TableName + ''' AS TableName, RecordTimeStamp, cast(Version as bigint), ID FROM ' + @TableName + ' WHERE (CAST ( RecordTimeStamp AS bigint) <> CAST ( RecordTimeStampCreated AS bigint)) AND RecordTimeStamp BETWEEN ' + @From + ' AND ' + @To + ' AND uRALUser_ID = ' +  +CAST(@User AS nvarchar(10));
+
+       --  PRINT @sql
+
+         INSERT INTO #useractions
+         EXEC sp_executesql @sql;
+         FETCH NEXT FROM tables INTO @TableName;
+     END;
+     CLOSE tables;
+     DEALLOCATE tables;
+     IF @Detail = 0
+     BEGIN
+         SELECT [Action], 
+                Tablename, 
+                RecordTimeStamp
+         FROM #useractions
+         GROUP BY [Action], 
+                  Tablename, 
+                  RecordTimeStamp
+         ORDER BY RecordTimeStamp, 
+                  [Action];
+     END;
+         ELSE
+     BEGIN
+         SELECT *
+         FROM #useractions
+         ORDER BY RecordTimeStamp, 
+                  Version, 
+                  [Action];
+     END;
+
+	 DROP TABLE #useractions;
+
+GO        
 
 
 /*** Results ***/
