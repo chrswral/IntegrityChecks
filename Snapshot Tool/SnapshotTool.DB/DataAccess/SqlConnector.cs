@@ -138,9 +138,9 @@ namespace SnapshotTool.DB.DataAccess
 
                 try
                 {
-                    var res1 = connection.Execute(sql1, commandType: CommandType.Text);
-                    var res2 = connection.Execute(sql2, commandType: CommandType.Text);
-                    var res3 = connection.Execute(sql3, commandType: CommandType.Text);
+                    var res1 = connection.Execute(sql1, commandType: CommandType.Text, commandTimeout:3600);
+                    var res2 = connection.Execute(sql2, commandType: CommandType.Text, commandTimeout: 3600);
+                    var res3 = connection.Execute(sql3, commandType: CommandType.Text, commandTimeout: 3600);
                     result = true;
                 }
                 catch (Exception ex)
