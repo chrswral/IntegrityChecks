@@ -225,7 +225,7 @@ namespace SnapshotTool
                 case dialogueActions.Delete:
                     labelActive.Visible = true;
                     labelActive.Text = "Deleting Snapshot";
-                    await Task.Run(() => { GlobalConfig.Connection.RemoveDatabaseSnapshots(databaseModel, true); });
+                    await Task.Run(() => { GlobalConfig.Connection.RemoveDatabaseSnapshots(databaseModel, false); });
                     labelActive.Visible = false;
 
                     break;
