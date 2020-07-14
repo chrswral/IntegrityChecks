@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+<_locDefinition xmlns="urn:locstudio">
+    <_locDefault _loc="locNone" />
+    <_locTag _loc="locData">Title</_locTag>
+    <_locTag _loc="locData">Description</_locTag>
+    <_locTag _loc="locData">Author</_locTag>
+    <_locTag _loc="locData">ToolTip</_locTag>
+</_locDefinition>
+	<CodeSnippet Format="1.0.0">
+	<Header>
+	<Title>Create Script Header</Title>
+        <Shortcut></Shortcut>
+	<Description>Creates the script header</Description>
+	<Author>Rusada</Author>
+	<SnippetTypes>
+		<SnippetType>Expansion</SnippetType>
+	</SnippetTypes>
+	</Header>
+	<Snippet>
+		<Declarations>
+			<Literal>
+				<ID>TicketNo</ID>
+				<ToolTip>Ticket Number</ToolTip>
+				<Default></Default>
+			</Literal>
+			<Literal>
+				<ID>Purpose</ID>
+				<ToolTip>Purpose of the script</ToolTip>
+				<Default></Default>
+			</Literal>
+			<Literal>
+				<ID>Author</ID>
+				<ToolTip>Author of the script</ToolTip>
+				<Default></Default>
+			</Literal>
+			<Literal>
+				<ID>ReviewedBy</ID>
+				<ToolTip>Who reviewed this script</ToolTip>
+				<Default></Default>
+			</Literal>
+			<Literal>
+				<ID>Estimated</ID>
+				<ToolTip>Estimated Row Count</ToolTip>
+				<Default></Default>
+			</Literal>
+			<Literal>
+				<ID>Backup</ID>
+				<ToolTip>Is a backup required</ToolTip>
+				<Default></Default>
+			</Literal>
+		</Declarations>
+		<Code Language="SQL">
+			<![CDATA[/* Requirements
+
+Ticket No: $TicketNo$
+Purpose: $Purpose$
+Author: $Author$
+Reviewed By:
+Estimated Row Count: $Estimated$
+Backup Required: $Backup$
+
+*/
+
+
+$end$]]>
+		</Code>
+	</Snippet>
+	</CodeSnippet>
+</CodeSnippets>

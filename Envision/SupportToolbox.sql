@@ -32,6 +32,112 @@ SELECT TOP 1000 *
 FROM
 (
 
+SELECT '3' AS Priority,
+       'Duplicate Requisition Numbers' AS Description,
+       ISNULL(COUNT(ds.DemandNo), 0) AS ErrorCount,
+       'SELECT sOrderRange_ID, MAX(sOrder.OrderNo) OrderNo, DemandNo, COUNT(DemandNo)NumberOfDuplicates, MAX(sDemand.RecordTimeStampCreated)RecordTimeStampCreated, MAX(sDemand.uRALUser_IDCreated)uRALUser_IDCreated
+              FROM sDemand
+              JOIN sOrderTask ON sOrderTask.ID = sOrderTask_ID
+              JOIN sOrder on sOrder.ID = sOrder_ID
+			  GROUP BY DemandNo, sOrderRange_ID
+              HAVING COUNT(DemandNo) > 1 
+              ORDER BY MAX(sDemand.RecordTimeStampCreated) DESC,COUNT(DemandNo) DESC, DemandNo' AS Query
+FROM (
+SELECT sDemand.DemandNo
+FROM sDemand
+JOIN sOrderTask ON sOrderTask.ID = sOrderTask_ID
+JOIN sOrder on sOrder.ID = sOrder_ID
+GROUP BY DemandNo, sOrderRange_ID
+HAVING COUNT(DemandNo) > 1
+) AS ds
+
+UNION
+
+SELECT '1' AS Priority, 
+       'Incorrect TSN Values' AS Description,
+       ISNULL(COUNT(ds.ID), 0) AS ErrorCount, 
+       'SELECT tAssetMIMSLocation.ID, tAssetMIMSLocation.RecordTimeStampCreated, tAsset.SerialNo, tAsset.AssetNo,tRegJourneyLogBookLifeCodeEvents.LifeTotal, tAssetHistoryLifeCode.*
+                            FROM tAssetMIMSLocation
+                            LEFT JOIN tAssetHistoryLifeCode ON tAssetHistoryLifeCode.tAssetMIMSLocation_ID = tAssetMIMSLocation.ID
+                            JOIN sOrderTask ON tAssetMIMSLocation.sOrderTask_ID = sOrderTask.ID
+                            JOIN sOrderTaskRegJourneyLogBook ON sOrderTaskRegJourneyLogBook.sOrderTask_ID = sOrderTask.ID
+                            JOIN tRegJourneyLogBook ON sOrderTaskRegJourneyLogBook.tRegJourneyLogBook_ID = tRegJourneyLogBook.ID AND tRegJourneyLogBook.tLogBook_ID = tAssetHistoryLifeCode.tLogBook_ID
+                            JOIN tRegJourneyLogBookLifeCodeEvents ON tRegJourneyLogBookLifeCodeEvents.tRegJourneyLogBook_ID = tRegJourneyLogBook.ID AND tRegJourneyLogBookLifeCodeEvents.tLifeCode_ID = tAssetHistoryLifeCode.tLifeCode_ID
+                            JOIN tAssetTree ON tAssetMIMSLocation.tAsset_ID = tAssetTree.tAsset_ID
+                            JOIN tReg ON tReg.tAsset_ID = tAssetTree.tAsset_IDTop
+                            JOIN tRegStatus ON tReg.tRegStatus_ID = tRegStatus.ID AND tRegStatus.Active = 1
+                            JOIN tAsset ON tAssetMIMSLocation.tAsset_ID = tAsset.ID
+                            WHERE
+                            tMIMSLocation_ID = 0 aND ActiveRecord = 1 
+                            AND tRegJourneyLogBookLifeCodeEvents.LifeTotal <> tAssetHistoryLifeCode.FitLifeCodeTotal 
+                            AND (
+                                   tAssetHistoryLifeCode.RecordTimeStampCreated > GETUTCDATE() -7 
+                                   OR tAssetHistoryLifeCode.RecordTimeStamp > GETUTCDATE() -7)
+                                          
+                            UNION
+
+                            SELECT tAssetMIMSLocation.ID, tAssetMIMSLocation.RecordTimeStampCreated, tAsset.SerialNo, tAsset.AssetNo,tRegJourneyLogBookLifeCodeEvents.LifeTotal, tAssetHistoryLifeCode.*
+                            FROM tAssetMIMSLocation
+                            LEFT JOIN tAssetHistoryLifeCode ON tAssetHistoryLifeCode.tAssetMIMSLocation_ID = tAssetMIMSLocation.ID
+                            JOIN sOrderTask ON tAssetMIMSLocation.sOrderTask_ID = sOrderTask.ID
+                            JOIN sOrderTaskRegJourneyLogBook ON sOrderTaskRegJourneyLogBook.sOrderTask_ID = sOrderTask.ID
+                            JOIN tRegJourneyLogBook ON sOrderTaskRegJourneyLogBook.tRegJourneyLogBook_ID = tRegJourneyLogBook.ID AND tRegJourneyLogBook.tLogBook_ID = tAssetHistoryLifeCode.tLogBook_ID
+                            JOIN tRegJourneyLogBookLifeCodeEvents ON tRegJourneyLogBookLifeCodeEvents.tRegJourneyLogBook_ID = tRegJourneyLogBook.ID AND tRegJourneyLogBookLifeCodeEvents.tLifeCode_ID = tAssetHistoryLifeCode.tLifeCode_ID
+                            JOIN tAssetTree ON tAssetMIMSLocation.tAsset_ID = tAssetTree.tAsset_ID
+                            JOIN tReg ON tReg.tAsset_ID = tAssetTree.tAsset_IDTop
+                            JOIN tRegStatus ON tReg.tRegStatus_ID = tRegStatus.ID AND tRegStatus.Active = 1
+                            JOIN tAsset ON tAssetMIMSLocation.tAsset_ID = tAsset.ID
+                            WHERE
+                            tMIMSLocation_ID = 0 aND ActiveRecord = 1 
+                            AND tRegJourneyLogBookLifeCodeEvents.LifeTotal <> tAssetHistoryLifeCode.FitLifeCodeTotal 
+                            AND (tAssetMIMSLocation.RecordTimeStampCreated > GETUTCDATE() -7 
+                                   OR tAssetMIMSLocation.RecordTimeStamp > GETUTCDATE() -7 )   
+                                   
+                            ORDER BY tAssetHistoryLifeCode.RecordTimeStamp DESC' AS Query
+FROM
+(
+    SELECT tAssetMIMSLocation.ID
+    FROM tAssetMIMSLocation
+         LEFT JOIN tAssetHistoryLifeCode ON tAssetHistoryLifeCode.tAssetMIMSLocation_ID = tAssetMIMSLocation.ID
+         JOIN sOrderTask ON tAssetMIMSLocation.sOrderTask_ID = sOrderTask.ID
+         JOIN sOrderTaskRegJourneyLogBook ON sOrderTaskRegJourneyLogBook.sOrderTask_ID = sOrderTask.ID
+         JOIN tRegJourneyLogBook ON sOrderTaskRegJourneyLogBook.tRegJourneyLogBook_ID = tRegJourneyLogBook.ID
+                                    AND tRegJourneyLogBook.tLogBook_ID = tAssetHistoryLifeCode.tLogBook_ID
+         JOIN tRegJourneyLogBookLifeCodeEvents ON tRegJourneyLogBookLifeCodeEvents.tRegJourneyLogBook_ID = tRegJourneyLogBook.ID
+                                                  AND tRegJourneyLogBookLifeCodeEvents.tLifeCode_ID = tAssetHistoryLifeCode.tLifeCode_ID
+         JOIN tAssetTree ON tAssetMIMSLocation.tAsset_ID = tAssetTree.tAsset_ID
+         JOIN tReg ON tReg.tAsset_ID = tAssetTree.tAsset_IDTop
+         JOIN tRegStatus ON tReg.tRegStatus_ID = tRegStatus.ID
+                            AND tRegStatus.Active = 1
+         JOIN tAsset ON tAssetMIMSLocation.tAsset_ID = tAsset.ID
+    WHERE tMIMSLocation_ID = 0
+          AND ActiveRecord = 1
+          AND tRegJourneyLogBookLifeCodeEvents.LifeTotal <> tAssetHistoryLifeCode.FitLifeCodeTotal
+          AND (tAssetHistoryLifeCode.RecordTimeStampCreated > GETUTCDATE() - 7
+               OR tAssetHistoryLifeCode.RecordTimeStamp > GETUTCDATE() - 7)
+    UNION ALL 
+    SELECT tAssetMIMSLocation.ID
+    FROM tAssetMIMSLocation
+         LEFT JOIN tAssetHistoryLifeCode ON tAssetHistoryLifeCode.tAssetMIMSLocation_ID = tAssetMIMSLocation.ID
+         JOIN sOrderTask ON tAssetMIMSLocation.sOrderTask_ID = sOrderTask.ID
+         JOIN sOrderTaskRegJourneyLogBook ON sOrderTaskRegJourneyLogBook.sOrderTask_ID = sOrderTask.ID
+         JOIN tRegJourneyLogBook ON sOrderTaskRegJourneyLogBook.tRegJourneyLogBook_ID = tRegJourneyLogBook.ID
+                                    AND tRegJourneyLogBook.tLogBook_ID = tAssetHistoryLifeCode.tLogBook_ID
+         JOIN tRegJourneyLogBookLifeCodeEvents ON tRegJourneyLogBookLifeCodeEvents.tRegJourneyLogBook_ID = tRegJourneyLogBook.ID
+                                                  AND tRegJourneyLogBookLifeCodeEvents.tLifeCode_ID = tAssetHistoryLifeCode.tLifeCode_ID
+         JOIN tAssetTree ON tAssetMIMSLocation.tAsset_ID = tAssetTree.tAsset_ID
+         JOIN tReg ON tReg.tAsset_ID = tAssetTree.tAsset_IDTop
+         JOIN tRegStatus ON tReg.tRegStatus_ID = tRegStatus.ID
+                            AND tRegStatus.Active = 1
+         JOIN tAsset ON tAssetMIMSLocation.tAsset_ID = tAsset.ID
+    WHERE tMIMSLocation_ID = 0
+          AND ActiveRecord = 1
+          AND tRegJourneyLogBookLifeCodeEvents.LifeTotal <> tAssetHistoryLifeCode.FitLifeCodeTotal
+          AND (tAssetMIMSLocation.RecordTimeStampCreated > GETUTCDATE() - 7
+               OR tAssetMIMSLocation.RecordTimeStamp > GETUTCDATE() - 7)
+) AS ds
+
+UNION
     
 SELECT '1' AS Priority,
        '*** CRITICAL *** MI life not tracking' AS Description,
@@ -462,6 +568,88 @@ LEFT JOIN sDemandPart ON sStock.sDemandPart_ID = sDemandPart.ID
 LEFT JOIN sDemandItemStatus ON sDemandItemStatus.ID = sDemandItemStatus_ID
 WHERE tToolStatus.ID IN (SELECT ID FROM tToolStatus WHERE InStock = 1) AND sDemandItemStatus.ID IN (SELECT ID FROM sDemandItemStatus WHERE Completed = 1)
 
+UNION
+
+SELECT '2'
+       , 'Duplicate tAssetHistoryLifeCode Records'
+       , ISNULL(COUNT(*),0) 
+       ,'SELECT 
+       tAsset.SerialNo, 
+       tAsset.AssetNo,
+          tAssetHistoryLifeCode.LifeCode,
+          tMI.MI, 
+       tMI.Title
+FROM
+(
+    SELECT tAssetHistoryLifeCode.ID tAssetHistoryLifeCode_ID, 
+           tAssetMIMSLocation_ID, 
+           COUNT(tAssetHistoryLifeCode.ID) OVER(PARTITION BY tAssetMIMSLocation_ID, 
+                                                             tLogBook_ID, 
+                                                             tLifeCode_ID) AHLCCount
+    FROM tAssetHistoryLifeCode
+         JOIN tAssetMIMSLocation ON tAssetHistoryLifeCode.tAssetMIMSLocation_ID = tAssetMIMSLocation.ID
+                                    AND tAssetMIMSLocation.ActiveRecord = 1
+         JOIN tAsset ON tAssetMIMSLocation.tAsset_ID = tAsset.ID
+         JOIN tAssetTree
+         JOIN tReg ON tAssetTree.tAsset_IDTop = tReg.tAsset_ID
+         JOIN tRegStatus ON tReg.tRegStatus_ID = tRegStatus.ID
+                            AND tRegStatus.Active = 1 ON tAssetTree.tAsset_ID = tAsset.ID
+         LEFT JOIN tMIMSLocation
+         JOIN tMIMS ON tMIMSLocation.tMIMS_ID = tMIMS.ID ON tAssetMIMSLocation.tMIMSLocation_ID = tMIMSLocation.ID
+    WHERE tMIMSLocation.ID IS NULL
+          OR (tAssetHistoryLifeCode.Sampling = tReg.Sampling)
+) qry
+JOIN tAssetMIMSLocation
+JOIN tAsset ON tAssetMIMSLocation.tAsset_ID = tAsset.ID
+LEFT JOIN tMIMSLocation
+JOIN tMIMS ON tMIMSLocation.tMIMS_ID = tMIMS.ID
+JOIN tMI ON tMIMS.tMI_ID = tMI.ID ON tAssetMIMSLocation.tMIMSLocation_ID = tMIMSLocation.ID ON qry.tAssetMIMSLocation_ID = tAssetMIMSLocation.ID
+JOIN tAssetHistoryLifeCode ON tAssetHistoryLifeCode.ID = qry.tAssetHistoryLifeCode_ID
+WHERE AHLCCount > 1
+GROUP BY        tMI.MI, 
+       tMI.Title, 
+       tAsset.SerialNo, 
+       tAsset.AssetNo,        tAssetHistoryLifeCode.LifeCode
+ORDER BY SerialNo, LifeCode'
+FROM
+(SELECT 
+       tAsset.SerialNo, 
+       tAsset.AssetNo,
+          tAssetHistoryLifeCode.LifeCode,
+          tMI.MI, 
+       tMI.Title
+FROM
+(
+    SELECT tAssetHistoryLifeCode.ID tAssetHistoryLifeCode_ID, 
+           tAssetMIMSLocation_ID, 
+           COUNT(tAssetHistoryLifeCode.ID) OVER(PARTITION BY tAssetMIMSLocation_ID, 
+                                                             tLogBook_ID, 
+                                                             tLifeCode_ID) AHLCCount
+    FROM tAssetHistoryLifeCode
+         JOIN tAssetMIMSLocation ON tAssetHistoryLifeCode.tAssetMIMSLocation_ID = tAssetMIMSLocation.ID
+                                    AND tAssetMIMSLocation.ActiveRecord = 1
+         JOIN tAsset ON tAssetMIMSLocation.tAsset_ID = tAsset.ID
+         JOIN tAssetTree
+         JOIN tReg ON tAssetTree.tAsset_IDTop = tReg.tAsset_ID
+         JOIN tRegStatus ON tReg.tRegStatus_ID = tRegStatus.ID
+                            AND tRegStatus.Active = 1 ON tAssetTree.tAsset_ID = tAsset.ID
+         LEFT JOIN tMIMSLocation
+         JOIN tMIMS ON tMIMSLocation.tMIMS_ID = tMIMS.ID ON tAssetMIMSLocation.tMIMSLocation_ID = tMIMSLocation.ID
+    WHERE tMIMSLocation.ID IS NULL
+          OR (tAssetHistoryLifeCode.Sampling = tReg.Sampling)
+) qry
+JOIN tAssetMIMSLocation
+JOIN tAsset ON tAssetMIMSLocation.tAsset_ID = tAsset.ID
+LEFT JOIN tMIMSLocation
+JOIN tMIMS ON tMIMSLocation.tMIMS_ID = tMIMS.ID
+JOIN tMI ON tMIMS.tMI_ID = tMI.ID ON tAssetMIMSLocation.tMIMSLocation_ID = tMIMSLocation.ID ON qry.tAssetMIMSLocation_ID = tAssetMIMSLocation.ID
+JOIN tAssetHistoryLifeCode ON tAssetHistoryLifeCode.ID = qry.tAssetHistoryLifeCode_ID
+WHERE AHLCCount > 1
+GROUP BY        tMI.MI, 
+       tMI.Title, 
+       tAsset.SerialNo, 
+       tAsset.AssetNo,        tAssetHistoryLifeCode.LifeCode
+)ds
 
 
 UNION
@@ -469,7 +657,7 @@ UNION
 SELECT '2'
         , 'Stock Integrity Errors'
         , ISNULL(COUNT(T.sOrderPartReceipt_ID),0) 
-        , 'SELECT * FROM sup.StockIntegrityErrors'
+        , 'SELECT * FROM sup.StockIntegrityCheck'
 FROM
 (SELECT sOrderPartReceipt.ID AS sOrderPartReceipt_ID,
        sOrderPartReceipt.Qty AS ReceiptQty,
@@ -493,7 +681,7 @@ WHERE T.ReceiptQty <> T.StockQty + T.IssueQty
 
 
 
-)ds
+)AS ds
 WHERE ds.ErrorCount > 0
 ORDER BY Priority;
 
@@ -1291,27 +1479,37 @@ GO
 
 CREATE VIEW sup.Locked
 AS
-SELECT dm_tran_locks.request_session_id,
-       dm_tran_locks.resource_database_id,
+SELECT dm_tran_locks.request_session_id AS SPID,
+       --dm_tran_locks.resource_database_id,
        DB_NAME(dm_tran_locks.resource_database_id) AS dbname,
        CASE
            WHEN resource_type = 'OBJECT'
                THEN OBJECT_NAME(dm_tran_locks.resource_associated_entity_id)
            ELSE OBJECT_NAME(partitions.object_id)
        END AS ObjectName,
-       partitions.index_id,
+       --partitions.index_id,
        indexes.name AS index_name,
        dm_tran_locks.resource_type,
        dm_tran_locks.resource_description,
        dm_tran_locks.resource_associated_entity_id,
        dm_tran_locks.request_mode,
-       dm_tran_locks.request_status
+       dm_tran_locks.request_status,
+	   IIF(dm_tran_locks.resource_type = 'KEY', CONCAT('SELECT * FROM ', CASE
+           WHEN resource_type = 'OBJECT'
+               THEN OBJECT_NAME(dm_tran_locks.resource_associated_entity_id)
+           ELSE OBJECT_NAME(partitions.object_id)
+       END,' WITH (NOLOCK) WHERE %%lockres%% = ''',RTRIM(dm_tran_locks.resource_description),'''')
+	   , '') AS Query
 FROM sys.dm_tran_locks
 LEFT JOIN sys.partitions ON partitions.hobt_id = dm_tran_locks.resource_associated_entity_id
 LEFT JOIN sys.indexes ON indexes.object_id = partitions.object_id AND indexes.index_id = partitions.index_id
 WHERE resource_associated_entity_id > 0
   AND resource_database_id = DB_ID()
-
+  AND CASE
+           WHEN resource_type = 'OBJECT'
+               THEN OBJECT_NAME(dm_tran_locks.resource_associated_entity_id)
+           ELSE OBJECT_NAME(partitions.object_id)
+       END NOT LIKE 'DF%'
 GO
 
 EXEC sys.sp_addextendedproperty
@@ -1445,7 +1643,101 @@ AS
 
 
     END;
+GO;
+
+
+IF EXISTS
+(
+SELECT *
+FROM sys.procedures
+WHERE name = 'GetUserActions'
+)
+    DROP PROCEDURE [sup].[GetUserActions];
 GO
+
+CREATE PROCEDURE sup.GetUserActions
+(
+                 @From   nvarchar(26), 
+                 @To     nvarchar(226), 
+                 @User   int          = 1, 
+                 @Detail int          = 0
+)
+AS
+
+     SET NOCOUNT ON
+
+     CREATE TABLE #useractions
+     (
+                  [Action]        VARCHAR(10), 
+                  Tablename       NVARCHAR(100), 
+                  RecordTimeStamp SMALLDATETIME, 
+                  Version         BIGINT, 
+                  ID              INT
+     );
+     
+     DECLARE @TableName NVARCHAR(100);
+     DECLARE @ColumnName NVARCHAR(100);
+     DECLARE @sql NVARCHAR(600);
+
+     SET @From = CONCAT('''',@From,'''')
+     SET @To = CONCAT('''',@To,'''')
+     SET @User = CAST(@User AS varchar(10))
+     --SET @Summary = 1; -- If set to 1, then results only show edit / created per table per minute.
+
+     DECLARE tables CURSOR
+     FOR SELECT sysobjects.name AS TableName
+         FROM syscolumns
+         INNER JOIN sysobjects ON syscolumns.id = sysobjects.id
+         WHERE sysobjects.xtype = 'U'
+               AND syscolumns.name = 'uRALUser_ID';
+
+     OPEN tables;
+     FETCH NEXT FROM tables INTO @TableName;
+     WHILE @@FETCH_STATUS = 0
+     BEGIN
+         SELECT @sql = 'SELECT ''Created'' AS Action, ''' + @TableName + ''' AS TableName, RecordTimeStampCreated AS RecordTimeStamp, cast(Version as bigint), ID FROM ' + @TableName + ' WHERE RecordTimeStampCreated BETWEEN ' + @From + ' AND ' + @To + ' AND uRALUser_IDCreated = ' + CAST(@User AS nvarchar(10)) ;
+
+       --  PRINT @sql
+
+         INSERT INTO #useractions
+         EXEC sp_executesql @sql;
+
+         -- NOTE - If this is a main table record, e.g. sDemandPart, then any edits by other users later will exclude this from the results.
+
+         SELECT @sql = 'SELECT ''Edited'' AS Action, ''' + @TableName + ''' AS TableName, RecordTimeStamp, cast(Version as bigint), ID FROM ' + @TableName + ' WHERE (CAST ( RecordTimeStamp AS bigint) <> CAST ( RecordTimeStampCreated AS bigint)) AND RecordTimeStamp BETWEEN ' + @From + ' AND ' + @To + ' AND uRALUser_ID = ' +  +CAST(@User AS nvarchar(10));
+
+       --  PRINT @sql
+
+         INSERT INTO #useractions
+         EXEC sp_executesql @sql;
+         FETCH NEXT FROM tables INTO @TableName;
+     END;
+     CLOSE tables;
+     DEALLOCATE tables;
+     IF @Detail = 0
+     BEGIN
+         SELECT [Action], 
+                Tablename, 
+                RecordTimeStamp
+         FROM #useractions
+         GROUP BY [Action], 
+                  Tablename, 
+                  RecordTimeStamp
+         ORDER BY RecordTimeStamp, 
+                  [Action];
+     END;
+         ELSE
+     BEGIN
+         SELECT *
+         FROM #useractions
+         ORDER BY RecordTimeStamp, 
+                  Version, 
+                  [Action];
+     END;
+
+	 DROP TABLE #useractions;
+
+GO        
 
 
 /*** Results ***/

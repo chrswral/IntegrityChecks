@@ -154,9 +154,14 @@ JOIN sPartTransactionType ON sPartTransactionType.ID = sPartTransactionType_ID
 JOIN sOrderPartSchedule ON sOrderPartSchedule.ID = sOrderPartSchedule_ID
 JOIN sOrderPart ON sOrderPart.ID = sOrderPartSchedule.sOrderPart_ID
 JOIN sDemand ON sDemand.ID = sDemand_ID
+JOIN sOrderPartReceipt ON sOrderPartReceipt.sOrderPartSchedule_ID = sOrderPartSchedule.ID
+JOIN sBaseWarehouseLocation ON sBaseWarehouseLocation.ID = sOrderPartReceipt.sBaseWarehouseLocation_ID
+JOIN sBaseWarehouse ON sBaseWarehouse.ID = sBaseWarehouseLocation.sBaseWarehouse_ID
 WHERE sDemandItemStatus_ID = 0
 AND sPartTransactionType.StockRepair = 1
 AND sOrderPart.ReceivedQty = sOrderPart.OrderQty
+AND sBaseWarehouse.uRALBase_ID = sDemandPart.uRALBase_ID
+
 
 
 /* Remove duplicate barcodes*/
