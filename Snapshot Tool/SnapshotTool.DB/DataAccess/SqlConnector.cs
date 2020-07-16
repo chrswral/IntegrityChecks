@@ -60,15 +60,12 @@ namespace SnapshotTool.DB.DataAccess
                                                                             source_database_id
                                                                           , COUNT(database_id) AS count
                                                                      FROM   sys.databases
-                                                                     WHERE  database_id > 6
-                                                                            AND
-                                                                            source_database_id IS NOT NULL
+                                                                     WHERE source_database_id IS NOT NULL
                                                                      GROUP BY
                                                                               source_database_id
                                                                      ) AS snapshots ON snapshots.source_database_id = databases.database_id
-                                                                WHERE database_id > 6
-                                                                      AND
-                                                                      databases.source_database_id IS NULL;
+                                                                WHERE 
+                                                                      databases.source_database_id IS NULL AND (databases.name NOT IN ('master','tempdb','model','msdb','ReportServer','ReportServerTempDB'));
                 ").ToList();
 
             }
@@ -141,9 +138,9 @@ namespace SnapshotTool.DB.DataAccess
 
                 try
                 {
-                    var res1 = connection.Execute(sql1, commandType: CommandType.Text);
-                    var res2 = connection.Execute(sql2, commandType: CommandType.Text);
-                    var res3 = connection.Execute(sql3, commandType: CommandType.Text);
+                    var res1 = connection.Execute(sql1, commandType: CommandType.Text, commandTimeout:3600);
+                    var res2 = connection.Execute(sql2, commandType: CommandType.Text, commandTimeout: 3600);
+                    var res3 = connection.Execute(sql3, commandType: CommandType.Text, commandTimeout: 3600);
                     result = true;
                 }
                 catch (Exception ex)
@@ -310,13 +307,13 @@ namespace SnapshotTool.DB.DataAccess
                                                                             source_database_id
                                                                           , COUNT(database_id) AS count
                                                                      FROM   sys.databases
-                                                                     WHERE  database_id > 6
+                                                                     WHERE  database_id > 4
                                                                             AND
                                                                             source_database_id IS NOT NULL
                                                                      GROUP BY
                                                                               source_database_id
                                                                      ) AS snapshots ON snapshots.source_database_id = databases.database_id
-                                                                WHERE database_id > 6
+                                                                WHERE database_id > 4
                                                                       AND
                                                                       databases.source_database_id = @source_database_id", new { source_database_id = databaseModel.ID })?.OrderByDescending(x => x.CreatedDate).ToList();
             }

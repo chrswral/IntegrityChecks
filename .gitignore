@@ -22,3 +22,7 @@ bin/
 /DocumentExport/DocumentExport/obj/Debug/DocumentExport.csproj.FileListAbsolute.txt
 /DocumentExport/DocumentExport/obj/Debug/DocumentExport.exe
 /DocumentExport/DocumentExport/obj/Debug/DocumentExport.pdb
+/Snapshot Tool/SnapshotTool/bin
+/Snapshot Tool/SnapshotTool/obj
+/Snapshot Tool/SnapshotTool.DB/bin
+/Snapshot Tool/SnapshotTool.DB/obj
