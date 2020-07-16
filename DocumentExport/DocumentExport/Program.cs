@@ -25,9 +25,8 @@ namespace DocumentExport
                 string TableList = @"";
                 string DocumentServer = @"";
                 string DocumentDatabase = @"";
-                string IDFileLocation = @"";
                 string IDList = @"";
-
+                string GRNList = @"";
 
                 Console.ForegroundColor = ConsoleColor.DarkGreen;
 
@@ -42,12 +41,18 @@ namespace DocumentExport
                     Console.WriteLine(@" -e EXPORT LOCATION");
                     Console.WriteLine(@" -dd DOCUMENT DATABASE (Optional)");
                     Console.WriteLine(@" -ds DOCUMENT SERVER (Optional)");
-                    Console.WriteLine(@" -t TABLE LIST (Optional)");
-                    Console.WriteLine(@" -f DOCUMENT ID LIST (Optional)");
+                    Console.WriteLine(@" -t TABLE LIST (Optional) - Comma seperated with single quotes. No spaces");
+                    Console.WriteLine(@" -id DOCUMENT ID LIST (Optional) - Comma seperated. No spaces, no quotes");
+                    Console.WriteLine(@" -g GRN LIST (Optional) Comma seperated with single quotes. No spaces");
                     Console.WriteLine(@"");
-                    Console.WriteLine(@"E.g. DocumentExport.exe -s .\SQL2017 -d RALDAW -l RalWebClientAdmin -p ralwebclientadmin -t 'aJournalDocument','tCard' -e C:\ExportTest");
+                    Console.WriteLine(@"E.g. DocumentExport.exe -s .\SQL17 -d RALEXMPL -l RalWebClientAdmin -p ralwebclientadmin -t 'aJournalDocument','tCard' -e C:\ExportTest");
                     Console.WriteLine(@"");
-                    Console.WriteLine(@"NOTE: Include spaces between command switch and parameter. E.g. -d RALDAW not -dRALDAW");
+                    Console.WriteLine(@"E.g. DocumentExport.exe -s .\SQL17 -d RALEXMPL -l RalWebClientAdmin -p ralwebclientadmin -id 144424,144425,144427 -e C:\ExportTest");
+                    Console.WriteLine(@"");
+                    Console.WriteLine(@"E.g. DocumentExport.exe -s .\SQL17 -d RALEXMPL -l RalWebClientAdmin -p ralwebclientadmin -g 'GRNB022947','GRNB022946' -e C:\ExportTest");
+                    Console.WriteLine(@"");
+                    Console.WriteLine(@"NOTE: Include spaces between command switch and parameter. E.g. -s .\SQL17 not -s.\SQL17");
+                    Console.WriteLine(@"      Leave  -t, -f and -g blank for all documents. Can take a very long time and use a lot of disk space!");
 
                     Console.ReadKey();
 
@@ -100,9 +105,14 @@ namespace DocumentExport
                         DocumentDatabase = args[i + 1].ToString();
                     }
 
-                    if (args[i].ToUpper() == "-F")
+                    if (args[i].ToUpper() == "-ID")
                     {
-                        IDFileLocation = args[i + 1].ToString();
+                        IDList = args[i + 1].ToString();
+                    }
+
+                    if (args[i].ToUpper() == "-G")
+                    {
+                        GRNList = args[i + 1].ToString();
                     }
 
                 }
@@ -120,29 +130,41 @@ namespace DocumentExport
                 string CS = @"Data Source=" + Server + @";Initial Catalog=" + Database + @"; User ID=" + User + @"; Password=" + Password;
                 string DCS = @"Data Source=" + DocumentServer + @";Initial Catalog=" + DocumentDatabase + @"; User ID=" + User + @"; Password=" + Password;
 
-                if (IDList != "")
+
+                if (GRNList != "")
+                {
+                    Console.WriteLine("GRN list supplied as parameter");
+                    GetDocsByGRN(GRNList, CS, DCS);
+                }
+                else if (IDList != "")
                 {
                     Console.WriteLine("ID list supplied as parameter");
                     GetDocsByID(IDList, CS, DCS);
                 }
-                else if (IDFileLocation != "")
+
+                else if (TableList != "")
                 {
-                    Console.WriteLine("ID file supplied");
-
-                    //Read the file and display it line by line.
-                    StreamReader file = new StreamReader(IDFileLocation);
-
-                    IDList = file.ReadLine();
-
-                    file.Close();
-
-                    GetDocsByID(IDList, CS, DCS);
-
+                    Console.WriteLine("Table list supplied as parameter");
+                    GetAllDocs(TableList, CS, DCS);
                 }
+
                 else  /* Get everything */
                 {
+
                     Console.WriteLine("No ID list or file list supplied, get everything");
-                    GetAllDocs(TableList, CS, DCS);
+                    Console.WriteLine("This will export ALL documents. This can take a long time and take a lot of disk space.");
+                    Console.WriteLine("Are you sure? y/n");
+
+                    ConsoleKeyInfo cki = Console.ReadKey();
+                    if (cki.Key == ConsoleKey.Y)
+                    {
+                        GetAllDocs("", CS, DCS);
+                    }
+                    else
+                    {
+                        return;
+                    }
+
                 }
 
                 //Console.ForegroundColor = ConsoleColor.Black;
@@ -160,10 +182,19 @@ namespace DocumentExport
             }
             
         }
-        private static void GetDocsByID(string IDList, string CS, string DCS)
+        private static void GetDocsByGRN(string GRNList, string CS, string DCS)
         {
 
-            string idQuery = "SELECT tDocument.ID FROM tDocument WHERE tDocument.ID IN ("+ IDList +")";
+            string idQuery = "SELECT tDocument.ID "+
+                             "FROM tDocument "+
+                             "LEFT JOIN sOrderPartReceiptDocument "+
+                             "JOIN sOrderPartReceipt ON sOrderPartReceipt.ID = sOrderPartReceiptDocument.sOrderPartReceipt_ID "+
+                             "ON sOrderPartReceiptDocument.tDocument_ID = tDocument.ID "+
+                             "LEFT JOIN sOrderReceiptNoDocument "+
+                             "       ON sOrderReceiptNoDocument.tDocument_ID = tDocument.ID "+
+                             "JOIN sOrderReceiptNo ON sOrderReceiptNo.ID = sOrderReceiptNoDocument.sOrderReceiptNo_ID "+
+                             "  OR sOrderReceiptNo.ID = sOrderPartReceipt.sOrderReceiptNo_ID "+
+                             " WHERE sOrderReceiptNo.ReceiptNo IN ("+ GRNList +") ";
             
             var dataAdapter = new SqlDataAdapter(idQuery, CS);
             var commandBuilder = new SqlCommandBuilder(dataAdapter);
@@ -196,6 +227,42 @@ namespace DocumentExport
 
 
         }
+
+        private static void GetDocsByID(string IDList, string CS, string DCS)
+        {
+
+            string idQuery = "SELECT tDocument.ID FROM tDocument WHERE tDocument.ID IN (" + IDList + ")";
+
+            var dataAdapter = new SqlDataAdapter(idQuery, CS);
+            var commandBuilder = new SqlCommandBuilder(dataAdapter);
+            var IDListDS = new DataSet();
+            dataAdapter.Fill(IDListDS);
+
+            foreach (DataRow row in IDListDS.Tables[0].Rows)
+            {
+                string path = Globals.ExportDirectory;
+                if (!Directory.Exists(path))
+                {
+                    DirectoryInfo di = Directory.CreateDirectory(path);
+                }
+
+                string DocID = row.Field<int>("ID").ToString();
+
+
+                Console.WriteLine("Getting Doc ID: " + DocID);
+                Document myDoc = new Document(DCS, int.Parse(DocID));
+
+                if (!File.Exists(path + @"\" + myDoc.ID.ToString() + " " + myDoc.FileName))
+                {
+
+                    Console.WriteLine("Exporting: " + myDoc.FileName);
+                    myDoc.Export(path);
+
+                }
+
+            }
+        }
+
         private static void GetAllDocs(string TableList, string CS, string DCS)
         {
             string tableQuery = "SELECT t.name TableName FROM sys.tables t JOIN sys.columns c ON c.object_id = t.object_id WHERE t.name LIKE '%Document%' AND c.name = 'tDocument_ID' ";
